@@ -18,16 +18,16 @@ blunt_outliers = function(vec){
 is_cycling = function(cyc_pred, tmm, cond_subset, pb = NULL){
   print(paste("Running is_cycling() on cond_subset:", cond_subset))
   #test significant in the following genes, here that all of them.
-  seedlist = tmm[!grepl("_D", tmm[,1]), 1] #ASSUMES FIRST COL is names
+  seedlist = unlist(unname(tmm[!grepl("_D", unlist(tmm[,1])), 1])) #ASSUMES FIRST COL is names
   
   preds= dplyr::select(cyc_pred, ID, Covariate_D, Phase) %>% filter(Covariate_D == cond_subset) %>% arrange(Phase)
   #b = as.factor(preds$Covariate_D)
   
   
-  gene = tmm[which(tmm[,1] %in% seedlist), -1] # since seedlist is all genes, "gene" will be tmm without gene_names
+  gene = tmm[which(unlist(unname(tmm[,1])) %in% seedlist), -1] # since seedlist is all genes, "gene" will be tmm without gene_names
   gene = apply(gene, 2, as.numeric)
   gene1 = t(gene[,na.exclude(match(preds$ID, colnames(gene)))])  # get the transpose, subjects x genes and put in order of CYCLOPS order
-  colnames(gene1) =  unname(unlist(tmm[which(tmm[,1] %in% seedlist), 1]))  #add the gene names to the columns of gene1
+  colnames(gene1) =  unname(unlist(tmm[which(unname(unlist(tmm[,1])) %in% seedlist), 1]))  #add the gene names to the columns of gene1
   
   
   #b = as.factor(preds$Covariate_D_1) #another covariate, in this case ceradsc
@@ -80,7 +80,7 @@ diff_rhyth = function(cyc_pred, tmm, seedlist,  pb = NULL){
   print(paste("Running diff_rhyth() on seedlist of size:", length(seedlist)))
   preds = cyc_pred %>% dplyr::select(ID, Phase, Covariate_D) %>% arrange(Phase)
   
-  gene = tmm[which(tmm[,1] %in% seedlist), -1] # "gene" is tmm with only seedlist subset
+  gene = tmm[which(unlist(unname(tmm[,1])) %in% seedlist), -1] # "gene" is tmm with only seedlist subset
   gene1 = t(gene[,na.exclude(match(preds$ID, colnames(gene)))])  #the transpose, subjects x genes for tidyverse purposes
   colnames(gene1) =  unname(unlist(tmm[which(tmm[,1] %in% seedlist), 1]))  #add the gene names to the columns of gene1
   
@@ -154,7 +154,7 @@ diff_rhyth_AD_severity = function(cyc_pred, tmm, seedlist, rosmap_clin_path,  pb
   
   preds = cyc_pred_merged %>% dplyr::filter(Covariate_D == "cond_1") %>% dplyr::select(ID, Phase, cogdx, ceradsc_bin) %>% arrange(Phase)
   
-  gene = tmm[which(tmm[,1] %in% seedlist), -1] # "gene" is tmm with only seedlist subset
+  gene = tmm[which(unlist(unname(tmm[,1])) %in% seedlist), -1] # "gene" is tmm with only seedlist subset
   gene1 = t(gene[,na.exclude(match(preds$ID, colnames(gene)))])  #the transpose, subjects x genes for tidyverse purposes
   colnames(gene1) =  unname(unlist(tmm[which(tmm[,1] %in% seedlist), 1]))  #add the gene names to the columns of gene1
   
@@ -237,7 +237,7 @@ mesor_differences = function(cyc_pred, tmm, DR_genes, pb = NULL){ ##
   print("Running Mesor_differences()")
   preds = cyc_pred %>% dplyr::select(ID, Phase, Covariate_D) %>% arrange(Phase)
 
-  gene = tmm[which(tmm[,1] %in% DR_genes), -1] # "gene" is tmm with only seedlist subset
+  gene = tmm[which(unlist(unname(tmm[,1])) %in% DR_genes), -1] # "gene" is tmm with only seedlist subset
   gene1 = t(gene[,na.exclude(match(preds$ID, colnames(gene)))])  #the transpose, subjects x genes for tidyverse purposes
   colnames(gene1) =  unname(unlist(tmm[which(tmm[,1] %in% DR_genes), 1]))  #add the gene names to the columns of gene1
 

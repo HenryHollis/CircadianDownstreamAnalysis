@@ -10,13 +10,15 @@ source("./fgsea.R")
 source("./compareRhythms.R")
 source("./Mesor_Venn_Diagram.R")
 source("./Files_for_Pscan.R")
-source("./")
+source("./Make_KEGG_map_files.R")
 conda_list()
 conda_list()[[2]][2] %>% 
   use_condaenv(required = TRUE)
 
 # absolute path to translation dict between gene symbols and ENSEMBL
 Ensembl_dict = readxl::read_xlsx("scROSMAP_ENSEMBL_dict.xlsx")
+entrez_dict = readxl::read_excel("scROSMAP_ENSEMBL_ENTREZ_dict.xlsx")
+
 #optional, add processors with doParallel pkg
 # cl <- makePSOCKcluster(8)
 # registerDoParallel(cl)
@@ -138,12 +140,11 @@ run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, i
   ##############################
   # Write out KEGG Image files #
   ##############################
-  setwd(path)
+  setwd(path_to_cyclops_ordering)
   if (!(dir.exists("diff_rhythms/KEGG_map_diagrams"))){
     dir.create("diff_rhythms/KEGG_map_diagrams")
   }
-  trans_dict = readxl::read_excel("scROSMAP_ENSEMBL_ENTREZ_dict.xlsx")
-  write_kegg_map_files("diff_rhythms/diff_rhythms_AmpRatio1.csv","Log_AD_CTL_ampRatio", trans_dict)
+  write_kegg_map_files("diff_rhythms/diff_rhythms_AmpRatio1.csv","Log_AD_CTL_ampRatio", entrez_dict)
 }
 
 #Microglia
