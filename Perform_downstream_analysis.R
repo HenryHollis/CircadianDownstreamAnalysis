@@ -125,6 +125,7 @@ run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, i
   #########
   # Pscan #
   #########
+  print("Starting Pscan Analysis")
   if(!(dir.exists(paste0(path_to_cyclops_ordering, "diff_rhythms/pscan")))){
     dir.create(paste0(path_to_cyclops_ordering, "diff_rhythms/pscan") )
   }

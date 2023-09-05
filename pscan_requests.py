@@ -15,21 +15,24 @@ parser.add_argument('--headless', help = 'bool if a browser opens', default = 1,
 args = parser.parse_args()
 
 #selenium_service = Service('/usr/local/bin/chromedriver')
-chrome_options = Options()
+#service = Service()
 
 df = pd.read_csv(args.file, sep=',')
 df_wo_NA = df.dropna()
-file_contents = '\n'.join(df_wo_NA['refseq_ids'].astype(str))
+file_contents = '\\n'.join(df_wo_NA['refseq_ids'].astype(str))
 
 
 word_count = len(df_wo_NA)
-print("Running Pscan on {}".format(os.path.basename(args.file)))
+print("Finished Pscan on {}".format(os.path.basename(args.file)))
 print("Number of genes:", word_count)
+options = webdriver.ChromeOptions()
 
 if (int(args.headless)):
-    chrome_options.add_argument('--headless')  # Run Chrome in headless mode
+    options.add_argument('--headless')  # Run Chrome in headless mode
 
-driver = webdriver.Chrome( options=chrome_options)
+#driver = webdriver.Chrome( options=chrome_options)
+# driver = webdriver.Chrome(service=service, options=options)
+driver = webdriver.Chrome( options=options)
 
 # Set the URL where the form is located
 url = args.url
@@ -39,8 +42,9 @@ driver.get(url)
 
 # Find and fill the input fields
 id_text_input = driver.find_element(By.NAME, 'id_text')
-id_text_input.send_keys(file_contents)
-
+#id_text_input.send_keys(file_contents)
+cmd = "document.getElementById('id_text').value = '{}';".format(file_contents)
+driver.execute_script(cmd)
 
 # Submit the form
 submit_button = driver.find_element(By.CSS_SELECTOR, 'input[type="submit"]')
