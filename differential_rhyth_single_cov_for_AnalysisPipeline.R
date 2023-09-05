@@ -82,7 +82,7 @@ diff_rhyth = function(cyc_pred, tmm, seedlist,  pb = NULL){
   
   gene = tmm[which(unlist(unname(tmm[,1])) %in% seedlist), -1] # "gene" is tmm with only seedlist subset
   gene1 = t(gene[,na.exclude(match(preds$ID, colnames(gene)))])  #the transpose, subjects x genes for tidyverse purposes
-  colnames(gene1) =  unname(unlist(tmm[which(tmm[,1] %in% seedlist), 1]))  #add the gene names to the columns of gene1
+  colnames(gene1) =  unname(unlist(tmm[which(unlist(unname(tmm[,1])) %in% seedlist), 1]))  #add the gene names to the columns of gene1
   
   I = as.factor(preds$Covariate_D[match(rownames(gene1), preds$ID)])        # CTL or AD factor
   times = as.numeric(preds$Phase[match(rownames(gene1), preds$ID)]) #in the case that I have CYCLOPS preds for subs not in tmm...
@@ -156,7 +156,7 @@ diff_rhyth_AD_severity = function(cyc_pred, tmm, seedlist, rosmap_clin_path,  pb
   
   gene = tmm[which(unlist(unname(tmm[,1])) %in% seedlist), -1] # "gene" is tmm with only seedlist subset
   gene1 = t(gene[,na.exclude(match(preds$ID, colnames(gene)))])  #the transpose, subjects x genes for tidyverse purposes
-  colnames(gene1) =  unname(unlist(tmm[which(tmm[,1] %in% seedlist), 1]))  #add the gene names to the columns of gene1
+  colnames(gene1) =  unname(unlist(tmm[which(unlist(unname(tmm[,1])) %in% seedlist), 1]))  #add the gene names to the columns of gene1
   
   cog = as.factor(preds$cogdx[match(rownames(gene1), preds$ID)])      # cogdx score 4 or 5
   cerad = as.factor(preds$ceradsc_bin[match(rownames(gene1), preds$ID)])
@@ -239,7 +239,7 @@ mesor_differences = function(cyc_pred, tmm, DR_genes, pb = NULL){ ##
 
   gene = tmm[which(unlist(unname(tmm[,1])) %in% DR_genes), -1] # "gene" is tmm with only seedlist subset
   gene1 = t(gene[,na.exclude(match(preds$ID, colnames(gene)))])  #the transpose, subjects x genes for tidyverse purposes
-  colnames(gene1) =  unname(unlist(tmm[which(tmm[,1] %in% DR_genes), 1]))  #add the gene names to the columns of gene1
+  colnames(gene1) =  unname(unlist(tmm[which(unlist(unname(tmm[,1])) %in% DR_genes), 1]))  #add the gene names to the columns of gene1
 
   #b = as.factor(preds$Covariate_D) # ROSMAP or WashU factor
   I = as.factor(preds$Covariate_D)        # CTL or AD factor

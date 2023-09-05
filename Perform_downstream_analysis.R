@@ -30,11 +30,14 @@ run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, i
   #.       path_to_tmm_file: string: absolute path to tmm gene expression matrix (csv)
   
   #run custom cycling and differential cycling analysis
+  print("***Running cosinor and differential rhythms analysis***")
   run_cycling_and_dr_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = isCyclingBonfCutoff)
   #Run the cycling and DC analysis with CompareRhythms package
+  print("***Running CompareRhythms Package***")
   run_compare_rhythms(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = isCyclingBonfCutoff)
   
   #creates a Venn diagram of diff_mesor genes vs diff mean genes from ttest
+  print("***Outputing Venn Diagram***")
   create_mesor_venn_diag(path_to_cyclops_ordering, BHQ = 0.05)
   
   #############################################
