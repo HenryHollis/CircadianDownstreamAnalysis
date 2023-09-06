@@ -11,6 +11,7 @@ source("./compareRhythms.R")
 source("./Mesor_Venn_Diagram.R")
 source("./Files_for_Pscan.R")
 source("./Make_KEGG_map_files.R")
+source("./Check_TF_for_cycling_or_DR.R")
 conda_list()
 conda_list()[[2]][2] %>% 
   use_condaenv(required = TRUE)
@@ -23,7 +24,7 @@ entrez_dict = readxl::read_excel("scROSMAP_ENSEMBL_ENTREZ_dict.xlsx")
 # cl <- makePSOCKcluster(8)
 # registerDoParallel(cl)
 
-run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05){
+run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05, deseq_de_filename = NULL){
   # this function handles, cosinor regression (custom and CompareRhtyms),
   # for cycling and differential cycling, EnrichR and fGSEA pathway analysis.
   # input: path_to_cyclops_ordering: string representing absolute path to cyclops ordering
@@ -56,8 +57,9 @@ run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, i
   DR_backgrounds = paste0("diff_rhythms_AmpRatio", str_replace(str_extract(DR_gene_lists, pattern = "AR\\d+"), "AR", ""), ".csv")
   DR_backgrounds[CR_files] = "diff_rhythms_AmpRatio25_COMPARERHYTHMS.csv"
   
-
-  #Diff_rhythms 
+  ##############
+  #Diff_rhythms# 
+  ##############
   setwd(paste0(path_to_cyclops_ordering, "diff_rhythms"))
   mapply(function(x, y){ 
     system(paste0("python3 ", path_no_space, "/Python_EnrichR_for_AnalysisPipeline.py -g \"enrichR_files/" ,x, "\" -b \"",y , "\""))},
@@ -141,6 +143,13 @@ run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, i
   sapply(pscan_files, function(x){ 
     system(paste0("python3 ", path_no_space, "/pscan_requests.py --file pscan_files/" ,x))})
   
+  if(!is.null(deseq_de_filename)){
+    setwd("pscan_results")
+    pscan_result_files = list.files(pattern = ".csv$")
+    print("Searching cycling and DR results for pscan TF")
+    sapply(pscan_result_files, augment_tf_file, deseq_de_filename)
+  }
+  
   ##############################
   # Write out KEGG Image files #
   ##############################
@@ -154,19 +163,23 @@ run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, i
 #Microglia
 path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Microglia/Mglia_CellsFiltered10Percent_OrderedbyExcNeuronsCellsFilteredErikChenZhangMinCV14CondCovs3EG_Jun12Redo/"
 path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/Mglia_cellsFiltered1count10percentCells.csv"
+deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/Microglia_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
 run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.1)
 
 #Astrocytes
 path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Astrocytes/Astro_OrderingFromExcitatoryNeuronsErikChenZhangCondCovs3EG_jun12Redo/"
 path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/Astrocyte_cellsFiltered1count10percentCells.csv"
+deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/Astrocyte_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
 run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.1)
 
 #Excitatory Neurons
 path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_3EG_Jun12Redo/"
 path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/ExcNeurons_cellsFiltered1count10percentCells.csv"
-run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05)
+deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/ExcitatoryNeurons_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
+run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05, deseq_de_filenamex)
 
 #Inhibitory Neurons
 path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/InhibitoryNeurons/InhNeurons_CellsFiltered10Percent_OrderedbyExcNeuronsCellsFilteredErikChenZhangMinCV14CondCovs3EG/"
 path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/InhNeurons_cellsFiltered1count10percentCells.csv"
+deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/InhibitoryNeuron_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
 run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05)

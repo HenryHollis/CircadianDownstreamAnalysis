@@ -60,10 +60,10 @@ driver.switch_to.window(driver.window_handles[-1])
 # Get the plain text from the new window
 plain_text = driver.find_element(By.TAG_NAME, 'pre').text
 
-if not os.path.exists("Pscan_results"):
-    os.makedirs("Pscan_results")
+if not os.path.exists("pscan_results"):
+    os.makedirs("pscan_results")
 
-outfile = os.path.join("Pscan_results", (os.path.basename(os.path.splitext(args.file)[0]) + "_results.csv"))
+outfile = os.path.join("pscan_results", (os.path.basename(os.path.splitext(args.file)[0]) + "_results.csv"))
 
 # Save the plain text to a file
 with open(outfile , 'w', encoding='utf-8') as file:
