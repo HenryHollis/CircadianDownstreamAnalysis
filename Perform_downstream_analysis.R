@@ -148,7 +148,13 @@ run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, i
     pscan_result_files = list.files(pattern = ".csv$")
     print("Searching cycling and DR results for pscan TF")
     sapply(pscan_result_files, augment_tf_file, deseq_de_filename)
-  }
+    setwd(paste0(path_to_cyclops_ordering, "diff_rhythms/enrichR_results"))
+    directories = list.files()
+    enrichR_TF_paths <- lapply(directories, function(dir) list.files(dir, full.names = TRUE, recursive = TRUE, pattern = ".*TRANSFACandJASPARPWMs_BCKGRND.*\\.csv|.*TranscriptionFactorPPIs_BCKGRND.*\\.csv"))
+    enrichR_TF_paths = flatten(enrichR_TF_paths) %>% paste0("./", .)  
+    sapply(enrichR_TF_paths, augment_tf_file, deseq_de_filename)
+    
+    }
   
   ##############################
   # Write out KEGG Image files #
@@ -176,7 +182,7 @@ run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBon
 path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_3EG_Jun12Redo/"
 path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/ExcNeurons_cellsFiltered1count10percentCells.csv"
 deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/ExcitatoryNeurons_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
-run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05, deseq_de_filenamex)
+run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05, deseq_de_filename)
 
 #Inhibitory Neurons
 path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/InhibitoryNeurons/InhNeurons_CellsFiltered10Percent_OrderedbyExcNeuronsCellsFilteredErikChenZhangMinCV14CondCovs3EG/"
