@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(description="Python Interface to EnrichR",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-l', "--lib", nargs='+', help="EnrichR library (https://maayanlab.cloud/Enrichr/#libraries)", default = ["KEGG_2021_Human", \
 "GO_Biological_Process_2023", "MSigDB_Hallmark_2020", "WikiPathway_2021_Human", "TRRUST_Transcription_Factors_2019", "GO_Cellular_Component_2023",\
-"TRANSFAC_and_JASPAR_PWMs", "Transcription_Factor_PPIs"])
+"TRANSFAC_and_JASPAR_PWMs", "Transcription_Factor_PPIs", "TargetScan_microRNA_2017", "miRTarBase_2017"])
 # possible other libs: "GO_Biological_Process_2023", "MSigDB_Hallmark_2020", "WikiPathway_2021_Human"
 parser.add_argument('-g',"--genes_list_file", help="Path to gene list")
 parser.add_argument('-b',"--background_list_file", help="Path to Background")
