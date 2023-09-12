@@ -59,8 +59,10 @@ is_cycling = function(cyc_pred, tmm, cond_subset, pb = NULL){
       amp_ratio = amplitude/ full_model1[["coefficients"]][1]
       #weighted_amp_ratio = sqrt(sin_coff^2 + cos_coeff^2) / ((full_model1[["coefficients"]][3] * length(which(b == levels(b)[1])) + full_model1[["coefficients"]][4] * length(which(b == levels(b)[2])) )/length(b) ) #full_model1[["coefficients"]][1]
       #abs_amp_ratio = abs(amp_ratio)
-      if (!is.null(pb) & !pb$finished){
-        pb$tick()
+      if (!is.null(pb)){
+        if(!pb$finished){
+          pb$tick()
+        }
       }
       gene_summary = cbind( Gene_Symbols, acrophase,amplitude, p_statistic, amp_ratio, sin_coff, cos_coeff)
       
@@ -117,8 +119,10 @@ diff_rhyth = function(cyc_pred, tmm, seedlist,  pb = NULL){
       acrophase_AD = atan2(sin_coeff2, cos_coeff2) %% (2*pi)
       amplitude_CTL = sqrt((sin_coeff^2) + (cos_coeff^2))
       amplitude_AD = sqrt((sin_coeff2^2) + (cos_coeff2^2))
-      if (!is.null(pb) & !pb$finished){
-        pb$tick()
+      if (!is.null(pb)){
+        if(!pb$finished){
+          pb$tick()
+        }
       }
       
       info = cbind( Gene_Symbols, p, acrophase_AD, acrophase_CTL, amplitude_AD, amplitude_CTL)
@@ -207,8 +211,10 @@ diff_rhyth_AD_severity = function(cyc_pred, tmm, seedlist, rosmap_clin_path,  pb
       amplitude_cerad1to2 = sqrt((sin_coeff_cerad^2) + (cos_coeff_cerad^2))
       acrophase_cerad3to5 = atan2(sin_coeff2_cerad, cos_coeff2_cerad) %% (2*pi)
       amplitude_cerad3to5= sqrt((sin_coeff2_cerad^2) + (cos_coeff2_cerad^2))
-      if (!is.null(pb) & !pb$finished){
-        pb$tick()
+      if (!is.null(pb)){
+        if(!pb$finished){
+          pb$tick()
+        }
       }
       
       info = c( Gene_Symbols, p_cog, p_cerad, acrophase_cog4, acrophase_cog5, 
@@ -274,8 +280,10 @@ mesor_differences = function(cyc_pred, tmm, DR_genes, pb = NULL){ ##
     # acrophase_AD = atan2(sin_coeff2, cos_coeff2) %% (2*pi)
     # amplitude_CTL = sqrt((sin_coeff^2) + (cos_coeff^2))
     # amplitude_AD = sqrt((sin_coeff2^2) + (cos_coeff2^2))
-    if (!is.null(pb) & !pb$finished){
-      pb$tick()
+    if (!is.null(pb)){
+      if(!pb$finished){
+        pb$tick()
+      }
     }
 
     info = cbind( Gene_Symbols, p_mesor, p_wilcox, p_ttest, mesor_prcnt_change)
@@ -327,7 +335,7 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   
   ####### differential rhtyhms with continuous cerad covs####
   diff_rhythms_AD_severity = diff_rhyth_AD_severity(cyc_pred, tmm,
-                unlist(strong_cyclers_AD_AR25$Gene_Symbols, use.names = F),
+                unname(unlist(strong_cyclers_AD_AR25$Gene_Symbols)),
                 rosmap_clin_path = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/Meta_data/cleaned_rosmap_meta_cogdxConds.csv")
   
   ####### differential rhythms #####
