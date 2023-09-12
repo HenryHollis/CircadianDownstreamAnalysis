@@ -59,7 +59,7 @@ is_cycling = function(cyc_pred, tmm, cond_subset, pb = NULL){
       amp_ratio = amplitude/ full_model1[["coefficients"]][1]
       #weighted_amp_ratio = sqrt(sin_coff^2 + cos_coeff^2) / ((full_model1[["coefficients"]][3] * length(which(b == levels(b)[1])) + full_model1[["coefficients"]][4] * length(which(b == levels(b)[2])) )/length(b) ) #full_model1[["coefficients"]][1]
       #abs_amp_ratio = abs(amp_ratio)
-      if (!is.null(pb)){
+      if (!is.null(pb) & !pb$finished){
         pb$tick()
       }
       gene_summary = cbind( Gene_Symbols, acrophase,amplitude, p_statistic, amp_ratio, sin_coff, cos_coeff)
@@ -117,7 +117,7 @@ diff_rhyth = function(cyc_pred, tmm, seedlist,  pb = NULL){
       acrophase_AD = atan2(sin_coeff2, cos_coeff2) %% (2*pi)
       amplitude_CTL = sqrt((sin_coeff^2) + (cos_coeff^2))
       amplitude_AD = sqrt((sin_coeff2^2) + (cos_coeff2^2))
-      if (!is.null(pb)){
+      if (!is.null(pb) & !pb$finished){
         pb$tick()
       }
       
@@ -207,7 +207,7 @@ diff_rhyth_AD_severity = function(cyc_pred, tmm, seedlist, rosmap_clin_path,  pb
       amplitude_cerad1to2 = sqrt((sin_coeff_cerad^2) + (cos_coeff_cerad^2))
       acrophase_cerad3to5 = atan2(sin_coeff2_cerad, cos_coeff2_cerad) %% (2*pi)
       amplitude_cerad3to5= sqrt((sin_coeff2_cerad^2) + (cos_coeff2_cerad^2))
-      if (!is.null(pb)){
+      if (!is.null(pb) & !pb$finished){
         pb$tick()
       }
       
@@ -274,7 +274,7 @@ mesor_differences = function(cyc_pred, tmm, DR_genes, pb = NULL){ ##
     # acrophase_AD = atan2(sin_coeff2, cos_coeff2) %% (2*pi)
     # amplitude_CTL = sqrt((sin_coeff^2) + (cos_coeff^2))
     # amplitude_AD = sqrt((sin_coeff2^2) + (cos_coeff2^2))
-    if (!is.null(pb)){
+    if (!is.null(pb) & !pb$finished){
       pb$tick()
     }
 

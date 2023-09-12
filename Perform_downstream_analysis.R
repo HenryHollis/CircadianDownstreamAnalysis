@@ -189,3 +189,9 @@ path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops
 path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/InhNeurons_cellsFiltered1count10percentCells.csv"
 deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/InhibitoryNeuron_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
 run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05)
+
+#Pseudobulk All Celltypes
+path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Pseudobulk/Pseudobulk_10countsIn10Prcnt_OrderedByExcNeuronsCellsFilteredErikChenZhangcondCovs3EG/"
+path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/PseudoBulk_scrosmapALL_cogdxControls_condCovs_filtered10counts10prcntSubs.csv"
+#deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/InhibitoryNeuron_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
+run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05)
