@@ -60,6 +60,7 @@ CR_cosinor_method = compareRhythms(logged_emat, exp_design, method = 'cosinor',
 #table(CR_cosinor_method$category)
 #table(CR_modsel_method$category)
 colnames(CR_cosinor_method)[1] = "Gene_Symbols"
+CR_cosinor_method$Gene_Symbols = gsub("\\.", "\\-", CR_cosinor_method$Gene_Symbols)
 cycling_in_CTL = filter(CR_cosinor_method, rhythmic_in_cond_0 == T) %>% select(Gene_Symbols)
 cycling_in_AD = filter(CR_cosinor_method, rhythmic_in_cond_1 == T) %>% select(Gene_Symbols)
 DR_cyclers = filter(CR_cosinor_method, diff_rhythmic == T) %>% select(Gene_Symbols)
