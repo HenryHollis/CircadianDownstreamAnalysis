@@ -61,11 +61,11 @@ CR_cosinor_method = compareRhythms(logged_emat, exp_design, method = 'cosinor',
 #table(CR_modsel_method$category)
 colnames(CR_cosinor_method)[1] = "Gene_Symbols"
 CR_cosinor_method$Gene_Symbols = gsub("\\.", "\\-", CR_cosinor_method$Gene_Symbols)
-cycling_in_CTL = filter(CR_cosinor_method, rhythmic_in_cond_0 == T) %>% select(Gene_Symbols)
-cycling_in_AD = filter(CR_cosinor_method, rhythmic_in_cond_1 == T) %>% select(Gene_Symbols)
-DR_cyclers = filter(CR_cosinor_method, diff_rhythmic == T) %>% select(Gene_Symbols)
-gain_cyclers = filter(CR_cosinor_method, diff_rhythmic == T & category == "gain") %>% select(Gene_Symbols)
-loss_cyclers = filter(CR_cosinor_method, diff_rhythmic == T & category == "loss") %>% select(Gene_Symbols)
+cycling_in_CTL = filter(CR_cosinor_method, rhythmic_in_cond_0 == T) %>% dplyr::select(Gene_Symbols)
+cycling_in_AD = filter(CR_cosinor_method, rhythmic_in_cond_1 == T) %>% dplyr::select(Gene_Symbols)
+DR_cyclers = filter(CR_cosinor_method, diff_rhythmic == T) %>% dplyr::select(Gene_Symbols)
+gain_cyclers = filter(CR_cosinor_method, diff_rhythmic == T & category == "gain") %>% dplyr::select(Gene_Symbols)
+loss_cyclers = filter(CR_cosinor_method, diff_rhythmic == T & category == "loss") %>% dplyr::select(Gene_Symbols)
 
 
 if (!(dir.exists(paste(path_to_cyclops_ordering, "diff_rhythms", sep = '/')))){

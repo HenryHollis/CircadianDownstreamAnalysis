@@ -363,18 +363,18 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   
   #Create list of strong cyclers (AR 0.25 or 0.33 and Bonf < Bonfcutoff) in CTL subjects
   Ensembl = Ensembl_dict$ENSEMBL[match(strong_cyclers_CTL_AR25$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
-  CTL_cyclers_AR25BonfCutoff = cbind(Ensembl, strong_cyclers_CTL_AR25) %>% select(Ensembl , Gene_Symbols )
+  CTL_cyclers_AR25BonfCutoff = cbind(Ensembl, strong_cyclers_CTL_AR25) %>% dplyr::select(Ensembl , Gene_Symbols )
   Ensembl = Ensembl_dict$ENSEMBL[match(strong_cyclers_CTL_AR33$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
-  CTL_cyclers_AR33BonfCutoff = cbind(Ensembl, strong_cyclers_CTL_AR33) %>% select(Ensembl , Gene_Symbols )
+  CTL_cyclers_AR33BonfCutoff = cbind(Ensembl, strong_cyclers_CTL_AR33) %>% dplyr::select(Ensembl , Gene_Symbols )
  
   #Create list of strong cyclers (AR 0.25 or 0.33 and Bonf < Bonfcutoff) in AD subjects
   Ensembl = Ensembl_dict$ENSEMBL[match(strong_cyclers_AD_AR25$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
-  AD_cyclers_AR25BonfCutoff = cbind(Ensembl, strong_cyclers_AD_AR25) %>% select(Ensembl , Gene_Symbols )
+  AD_cyclers_AR25BonfCutoff = cbind(Ensembl, strong_cyclers_AD_AR25) %>% dplyr::select(Ensembl , Gene_Symbols )
   Ensembl = Ensembl_dict$ENSEMBL[match(strong_cyclers_AD_AR33$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
-  AD_cyclers_AR33BonfCutoff = cbind(Ensembl, strong_cyclers_AD_AR33) %>% select(Ensembl , Gene_Symbols )
+  AD_cyclers_AR33BonfCutoff = cbind(Ensembl, strong_cyclers_AD_AR33) %>% dplyr::select(Ensembl , Gene_Symbols )
   
   # All genes expressed in CTL and AD:
-  EnrichR_background = cycling_in_CTL %>% select(Ensembl, Gene_Symbols)
+  EnrichR_background = cycling_in_CTL %>% dplyr::select(Ensembl, Gene_Symbols)
 
   #Create list of strong DR genes (AR 0.33 or 0.25 or 0.1, and BHQ< 0.2 or BHQ< 0.1, respectively) 
   DR_cyclers_AR33BHQ2 = dplyr::filter(diff_rhythms33,  as.numeric(BHQ) < 0.2) %>% arrange(as.numeric(BHQ))
@@ -382,14 +382,14 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   DR_cyclers_AR1BHQ1 = dplyr::filter(diff_rhythms1,  as.numeric(BHQ) < 0.1) %>% arrange(as.numeric(BHQ))
   
   #Create list of lost cycling DR genes:
-  DR_lostAmpAD_AR33BHQ2 = filter(diff_rhythms33, BHQ < 0.2, Log_AD_CTL_ampRatio < 0)  %>% select(Ensembl, Gene_Symbols)
-  DR_lostAmpAD_AR25BHQ2 = filter(diff_rhythms25, BHQ < 0.2, Log_AD_CTL_ampRatio < 0)  %>% select(Ensembl, Gene_Symbols)
-  DR_lostAmpAD_AR1BHQ1 = filter(diff_rhythms1, BHQ < 0.1, Log_AD_CTL_ampRatio < 0) %>% select(Ensembl, Gene_Symbols)
+  DR_lostAmpAD_AR33BHQ2 = filter(diff_rhythms33, BHQ < 0.2, Log_AD_CTL_ampRatio < 0)  %>% dplyr::select(Ensembl, Gene_Symbols)
+  DR_lostAmpAD_AR25BHQ2 = filter(diff_rhythms25, BHQ < 0.2, Log_AD_CTL_ampRatio < 0)  %>% dplyr::select(Ensembl, Gene_Symbols)
+  DR_lostAmpAD_AR1BHQ1 = filter(diff_rhythms1, BHQ < 0.1, Log_AD_CTL_ampRatio < 0) %>% dplyr::select(Ensembl, Gene_Symbols)
   
   #Create lists of gained cycling DR genes
-  DR_gainAmpAD_AR33BHQ2= filter(diff_rhythms33, BHQ < 0.2, Log_AD_CTL_ampRatio > 0)  %>% select(Ensembl, Gene_Symbols)
-  DR_gainAmpAD_AR25BHQ2= filter(diff_rhythms25, BHQ < 0.2, Log_AD_CTL_ampRatio > 0)  %>% select(Ensembl, Gene_Symbols)
-  DR_gainAmpAD_AR1BHQ1 = filter(diff_rhythms1, BHQ < 0.1, Log_AD_CTL_ampRatio > 0) %>% select(Ensembl, Gene_Symbols)
+  DR_gainAmpAD_AR33BHQ2= filter(diff_rhythms33, BHQ < 0.2, Log_AD_CTL_ampRatio > 0)  %>% dplyr::select(Ensembl, Gene_Symbols)
+  DR_gainAmpAD_AR25BHQ2= filter(diff_rhythms25, BHQ < 0.2, Log_AD_CTL_ampRatio > 0)  %>% dplyr::select(Ensembl, Gene_Symbols)
+  DR_gainAmpAD_AR1BHQ1 = filter(diff_rhythms1, BHQ < 0.1, Log_AD_CTL_ampRatio > 0) %>% dplyr::select(Ensembl, Gene_Symbols)
   
  
   if (!(dir.exists(paste(order_path, "diff_rhythms", sep = '/')))){
@@ -430,18 +430,18 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   
   #Continuous AD differences
   write.table(diff_rhythms_AD_severity, paste(order_path, "diff_rhythms", "diff_rhythms_AD_severity_AR25.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
-  strong_cogdx_diffs = filter(diff_rhythms_AD_severity, BHQ_cogdx< 0.1) %>% select(Gene_Symbols)
+  strong_cogdx_diffs = filter(diff_rhythms_AD_severity, BHQ_cogdx< 0.1) %>% dplyr::select(Gene_Symbols)
   Ensembl = Ensembl_dict$ENSEMBL[match(strong_cogdx_diffs$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
-  strong_cogdx_diffs = cbind(Ensembl, strong_cogdx_diffs) %>% select(Ensembl , Gene_Symbols )
+  strong_cogdx_diffs = cbind(Ensembl, strong_cogdx_diffs) %>% dplyr::select(Ensembl , Gene_Symbols )
   write.table(strong_cogdx_diffs, paste(order_path, "diff_rhythms", "enrichR_files", "strong_cogdx_diffs_AR25.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
   
   #create lists of genes for PSEA
-  PSEA_CTL_cyclers_AR25BonfCutoff = strong_cyclers_CTL_AR25 %>% select(Gene_Symbols, acrophase ) %>% mutate(acrophase = as.numeric(acrophase) * 12 / pi)
+  PSEA_CTL_cyclers_AR25BonfCutoff = strong_cyclers_CTL_AR25 %>% dplyr::select(Gene_Symbols, acrophase ) %>% mutate(acrophase = as.numeric(acrophase) * 12 / pi)
   write.table(PSEA_CTL_cyclers_AR25BonfCutoff, paste0(order_path, "diff_rhythms/PSEA_files/PSEA_CTL_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".txt"), sep = '\t', row.names = F, col.names = F, quote = F)
-  PSEA_AD_cyclers_AR25BonfCutoff = strong_cyclers_AD_AR25 %>% select(Gene_Symbols, acrophase ) %>% mutate(acrophase = as.numeric(acrophase) * 12 / pi)
+  PSEA_AD_cyclers_AR25BonfCutoff = strong_cyclers_AD_AR25 %>% dplyr::select(Gene_Symbols, acrophase ) %>% mutate(acrophase = as.numeric(acrophase) * 12 / pi)
   write.table(PSEA_AD_cyclers_AR25BonfCutoff, paste0(order_path, "diff_rhythms/PSEA_files/PSEA_AD_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".txt"), sep = '\t', row.names = F, col.names = F, quote = F)
   PSEA_DR_AR25BHQ2_acrodiffs = DR_cyclers_AR25BHQ2 %>% mutate(acro_diff = (as.numeric(acrophase_AD) - as.numeric(acrophase_CTL))*12/pi ) %>%
-    select(Gene_Symbols, acro_diff)
+    dplyr::select(Gene_Symbols, acro_diff)
   write.table(PSEA_DR_AR25BHQ2_acrodiffs, paste0(order_path, "diff_rhythms/PSEA_files/PSEA_DR_AR25BHQ2_acrodiffs.txt"), sep = '\t', row.names = F, col.names = F, quote = F)
   
   }
