@@ -19,7 +19,7 @@ is_cycling = function(cyc_pred, tmm, cond_subset, pb = NULL){
   print(paste("Running is_cycling() on cond_subset:", cond_subset))
   #test significant in the following genes, here that all of them.
   seedlist = unlist(unname(tmm[!grepl("_D", unlist(tmm[,1])), 1])) #ASSUMES FIRST COL is names
-  
+  cyc_pred$Covariate_D = tmm[1, na.exclude(match(cyc_pred$ID, colnames(tmm)))] %>% unname %>% unlist
   preds= dplyr::select(cyc_pred, ID, Covariate_D, Phase) %>% filter(Covariate_D == cond_subset) %>% arrange(Phase)
   #b = as.factor(preds$Covariate_D)
   
@@ -80,6 +80,8 @@ is_cycling = function(cyc_pred, tmm, cond_subset, pb = NULL){
 
 diff_rhyth = function(cyc_pred, tmm, seedlist,  pb = NULL){
   print(paste("Running diff_rhyth() on seedlist of size:", length(seedlist)))
+  cyc_pred$Covariate_D = tmm[1, na.exclude(match(cyc_pred$ID, colnames(tmm)))] %>% unname %>% unlist
+  
   preds = cyc_pred %>% dplyr::select(ID, Phase, Covariate_D) %>% arrange(Phase)
   
   gene = tmm[which(unlist(unname(tmm[,1])) %in% seedlist), -1] # "gene" is tmm with only seedlist subset
@@ -154,6 +156,8 @@ diff_rhyth_AD_severity = function(cyc_pred, tmm, seedlist, rosmap_clin_path,  pb
   rosmap_clin$apoe_ordinal[rosmap_clin$apoe_genotype == 44 ] = 3
   rosmap_clin$apoe_ordinal[is.na(rosmap_clin$apoe_genotype) ] = NA
   ###############
+  cyc_pred$Covariate_D = tmm[1, na.exclude(match(cyc_pred$ID, colnames(tmm)))] %>% unname %>% unlist
+  
   cyc_pred_merged = merge(cyc_pred, rosmap_clin, by.x = "ID", by.y = "projid", y.keep = F)
   
   preds = cyc_pred_merged %>% dplyr::filter(Covariate_D == "cond_1") %>% dplyr::select(ID, Phase, cogdx, ceradsc_bin) %>% arrange(Phase)
@@ -196,13 +200,13 @@ diff_rhyth_AD_severity = function(cyc_pred, tmm, seedlist, rosmap_clin_path,  pb
       amplitude_cog4= sqrt((sin_coeff^2) + (cos_coeff^2))
       acrophase_cog5 = atan2(sin_coeff2, cos_coeff2) %% (2*pi)
       amplitude_cog5= sqrt((sin_coeff2^2) + (cos_coeff2^2))
-        
+      
       ####### ceradsc_binned #########
       partial_model_cerad = lm(gexp1 ~ sin(times1) + cos(times1) + I_local_cerad + 0)
       full_model_cerad = lm(gexp1 ~ I_local_cerad*sin(times1) + I_local_cerad*cos(times1) + I_local_cerad + 0)
       anova_results_cerad = anova(partial_model_cerad, full_model_cerad)
       p_cerad = anova_results_cerad$`Pr(>F)`[2]
-
+      
       sin_coeff_cerad = full_model_cerad[["coefficients"]][["sin(times1)"]]
       cos_coeff_cerad = full_model_cerad[["coefficients"]][["cos(times1)"]]
       sin_coeff2_cerad = full_model_cerad[["coefficients"]][["I_local_cerad[3,5):sin(times1)"]] + sin_coeff_cerad
@@ -241,25 +245,27 @@ diff_rhyth_AD_severity = function(cyc_pred, tmm, seedlist, rosmap_clin_path,  pb
 
 mesor_differences = function(cyc_pred, tmm, DR_genes, pb = NULL){ ##
   print("Running Mesor_differences()")
+  cyc_pred$Covariate_D = tmm[1, na.exclude(match(cyc_pred$ID, colnames(tmm)))] %>% unname %>% unlist
+  
   preds = cyc_pred %>% dplyr::select(ID, Phase, Covariate_D) %>% arrange(Phase)
-
+  
   gene = tmm[which(unlist(unname(tmm[,1])) %in% DR_genes), -1] # "gene" is tmm with only seedlist subset
   gene1 = t(gene[,na.exclude(match(preds$ID, colnames(gene)))])  #the transpose, subjects x genes for tidyverse purposes
   colnames(gene1) =  unname(unlist(tmm[which(unlist(unname(tmm[,1])) %in% DR_genes), 1]))  #add the gene names to the columns of gene1
-
+  
   #b = as.factor(preds$Covariate_D) # ROSMAP or WashU factor
   I = as.factor(preds$Covariate_D)        # CTL or AD factor
   #b = as.factor(preds$Covariate_D_1)
   times = as.numeric(preds$Phase)
-
+  
   all_genes = foreach (gene_i = 1:ncol(gene1), .combine = rbind) %do%{
     gexp1 = as.numeric(unlist(gene1[,gene_i]))
     gexp1 = blunt_outliers(gexp1)
-
+    
     #partial_model1 = lm(gexp1 ~ I:sin(times) + I:cos(times))
     partial_model1 = lm(gexp1 ~ sin(times) + cos(times))
     #partial_model1 = lm(gexp1 ~ b)
-
+    
     full_model1 = lm(gexp1 ~ sin(times) + cos(times) + I)
     #full_model1 = lm(gexp1 ~ sin(times) + cos(times) + b)
     anova_results1 = anova(partial_model1, full_model1)
@@ -285,7 +291,7 @@ mesor_differences = function(cyc_pred, tmm, DR_genes, pb = NULL){ ##
         pb$tick()
       }
     }
-
+    
     info = cbind( Gene_Symbols, p_mesor, p_wilcox, p_ttest, mesor_prcnt_change)
     return(info)
   }
@@ -335,8 +341,8 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   
   ####### differential rhtyhms with continuous cerad covs####
   diff_rhythms_AD_severity = diff_rhyth_AD_severity(cyc_pred, tmm,
-                unname(unlist(strong_cyclers_AD_AR25$Gene_Symbols)),
-                rosmap_clin_path = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/Meta_data/cleaned_rosmap_meta_cogdxConds.csv")
+                                                    unname(unlist(strong_cyclers_AD_AR25$Gene_Symbols)),
+                                                    rosmap_clin_path = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/Meta_data/cleaned_rosmap_meta_cogdxConds.csv")
   
   ####### differential rhythms #####
   pb <- progress_bar$new(total = length(seedlist_AR25))
@@ -366,7 +372,7 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   CTL_cyclers_AR25BonfCutoff = cbind(Ensembl, strong_cyclers_CTL_AR25) %>% dplyr::select(Ensembl , Gene_Symbols )
   Ensembl = Ensembl_dict$ENSEMBL[match(strong_cyclers_CTL_AR33$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
   CTL_cyclers_AR33BonfCutoff = cbind(Ensembl, strong_cyclers_CTL_AR33) %>% dplyr::select(Ensembl , Gene_Symbols )
- 
+  
   #Create list of strong cyclers (AR 0.25 or 0.33 and Bonf < Bonfcutoff) in AD subjects
   Ensembl = Ensembl_dict$ENSEMBL[match(strong_cyclers_AD_AR25$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
   AD_cyclers_AR25BonfCutoff = cbind(Ensembl, strong_cyclers_AD_AR25) %>% dplyr::select(Ensembl , Gene_Symbols )
@@ -375,7 +381,7 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   
   # All genes expressed in CTL and AD:
   EnrichR_background = cycling_in_CTL %>% dplyr::select(Ensembl, Gene_Symbols)
-
+  
   #Create list of strong DR genes (AR 0.33 or 0.25 or 0.1, and BHQ< 0.2 or BHQ< 0.1, respectively) 
   DR_cyclers_AR33BHQ2 = dplyr::filter(diff_rhythms33,  as.numeric(BHQ) < 0.2) %>% arrange(as.numeric(BHQ))
   DR_cyclers_AR25BHQ2 = dplyr::filter(diff_rhythms25,  as.numeric(BHQ) < 0.2) %>% arrange(as.numeric(BHQ))
@@ -391,7 +397,7 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   DR_gainAmpAD_AR25BHQ2= filter(diff_rhythms25, BHQ < 0.2, Log_AD_CTL_ampRatio > 0)  %>% dplyr::select(Ensembl, Gene_Symbols)
   DR_gainAmpAD_AR1BHQ1 = filter(diff_rhythms1, BHQ < 0.1, Log_AD_CTL_ampRatio > 0) %>% dplyr::select(Ensembl, Gene_Symbols)
   
- 
+  
   if (!(dir.exists(paste(order_path, "diff_rhythms", sep = '/')))){
     dir.create(paste(order_path, "diff_rhythms", sep = '/'))
     dir.create(paste(order_path, "diff_rhythms", "enrichR_results", sep = '/'))
@@ -444,4 +450,4 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
     dplyr::select(Gene_Symbols, acro_diff)
   write.table(PSEA_DR_AR25BHQ2_acrodiffs, paste0(order_path, "diff_rhythms/PSEA_files/PSEA_DR_AR25BHQ2_acrodiffs.txt"), sep = '\t', row.names = F, col.names = F, quote = F)
   
-  }
+}

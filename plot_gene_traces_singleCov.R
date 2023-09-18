@@ -118,39 +118,22 @@ draw_gene_tracings = function(cyc_pred, tmm, seedlist, savePlots = F, split_cond
  
 
 }
-plot_exc_neuron_genes = function(seedlist, split_cond_plots = T){
+plot_exc_neuron_genes = function(seedlist, split_cond_plots = T, 
+          tmm_path = "DEseq2_normed/ExcNeurons_cogdxControls_condCovs_filtered1counts10prcntCells_deseq.csv",
+          fits_path = "../../../training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_3EG_DeseqNormed/Fits/"                      ){
   setwd("~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/")
   rosmap_meta = read.csv("../../../../../scROSMAP/Meta_data/cleaned_rosmap_meta_cogdxConds.csv")
-  fits_path = "../../../training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_3EG_Jun12Redo/Fits/"
-  tmm_path = "ExcNeurons_cellsFiltered1count10percentCells.csv"
+  print(paste("Plotting from", tmm_path))
+  print(paste("Using", fits_path, "Fits"))
+  # fits_path = "../../../training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_3EG_Jun12Redo/Fits/"
+  #tmm_path = "ExcNeurons_cellsFiltered1count10percentCells.csv"
   tmm = read_csv(tmm_path)
   cyc_pred_file = list.files(path = fits_path, pattern = '*Fit_Output_*')
   cyc_pred = read.csv(paste0(fits_path,cyc_pred_file))
   
   draw_gene_tracings(cyc_pred, tmm, seedlist, split_cond_plots = split_cond_plots)
 }
-plot_mglia_genes = function(seedlist, split_cond_plots = T){
-  setwd("~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/")
-  rosmap_meta = read.csv("../../../../../scROSMAP/Meta_data/cleaned_rosmap_meta_cogdxConds.csv")
-  fits_path = "../../../training_output/scROSMAP/cogdx_controls/wAD/Microglia/Mglia_CellsFiltered10Percent_OrderedbyExcNeuronsCellsFilteredErikChenZhangMinCV14CondCovs3EG_Jun12Redo/Fits/"
-  tmm_path = "Mglia_cellsFiltered1count10percentCells.csv"
-  tmm = read_csv(tmm_path)
-  cyc_pred_file = list.files(path = fits_path, pattern = '*Fit_Output_*')
-  cyc_pred = read.csv(paste0(fits_path,cyc_pred_file))
-  
-  draw_gene_tracings(cyc_pred, tmm, seedlist, split_cond_plots = split_cond_plots)
-}
-plot_inh_neuron_genes = function(seedlist, split_cond_plots = T){
-  setwd("~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/")
-  rosmap_meta = read.csv("../../../../../scROSMAP/Meta_data/cleaned_rosmap_meta_cogdxConds.csv")
-  fits_path = "../../../training_output/scROSMAP/cogdx_controls/wAD/InhibitoryNeurons/InhNeurons_CellsFiltered10Percent_OrderedbyExcNeuronsCellsFilteredErikChenZhangMinCV14CondCovs3EG/Fits/"
-  tmm_path = "InhNeurons_cellsFiltered1count10percentCells.csv"
-  tmm = read_csv(tmm_path)
-  cyc_pred_file = list.files(path = fits_path, pattern = '*Fit_Output_*')
-  cyc_pred = read.csv(paste0(fits_path,cyc_pred_file))
-  
-  draw_gene_tracings(cyc_pred, tmm, seedlist, split_cond_plots = split_cond_plots)
-}
+
 draw_gene_tracings_AD_continuous = function(cyc_pred, tmm, seedlist, savePlots = F,
                                             rosmap_clin_path){
   

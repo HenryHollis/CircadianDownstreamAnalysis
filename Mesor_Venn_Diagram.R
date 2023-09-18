@@ -5,9 +5,9 @@ create_mesor_venn_diag = function(path_to_cyclops_ordering, BHQcutoff = 0.05){
 setwd(paste(path_to_cyclops_ordering, "diff_rhythms", sep = "/"))
 
 mesor_file = read_csv("differential_mesor_AR1.csv")
-diff_mesor_BHQ05 = filter(mesor_file, BHQ < BHQcutoff) %>% select(Gene_Symbols) %>% unname %>% unlist
-diff_meanWilcox_BHQ05 = filter(mesor_file, BHQ_wilcox < BHQcutoff) %>% select(Gene_Symbols) %>% unname %>% unlist
-diff_meanttest_BHQ05 = filter(mesor_file, BHQ_ttest < BHQcutoff) %>% select(Gene_Symbols) %>% unname %>% unlist
+diff_mesor_BHQ05 = filter(mesor_file, BHQ < BHQcutoff) %>% dplyr::select(Gene_Symbols) %>% unname %>% unlist
+diff_meanWilcox_BHQ05 = filter(mesor_file, BHQ_wilcox < BHQcutoff) %>% dplyr::select(Gene_Symbols) %>% unname %>% unlist
+diff_meanttest_BHQ05 = filter(mesor_file, BHQ_ttest < BHQcutoff) %>% dplyr::select(Gene_Symbols) %>% unname %>% unlist
 
 futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
 
