@@ -18,6 +18,7 @@ draw_gene_tracings = function(cyc_pred, tmm, seedlist, savePlots = F, split_cond
   #mouse_path = list.files(fits_path, pattern = "Mouse_Atlas_*")
   #mouse_aligned = read_csv(paste0(fits_path, mouse_path))
   colnames(tmm)[1] = "gene_names" #set first column name bc sometimes they are different
+  cyc_pred$Covariate_D = tmm[1, na.exclude(match(cyc_pred$ID, colnames(tmm)))] %>% unname %>% unlist
   
   #seedlist = unname(unlist(read.csv(seedlist)))
   #sig_cyclers = dplyr::filter(mouse_aligned, BHQ_Statistic < 0.05) %>% dplyr::select( Gene_Symbols)
@@ -120,7 +121,7 @@ draw_gene_tracings = function(cyc_pred, tmm, seedlist, savePlots = F, split_cond
 }
 plot_exc_neuron_genes = function(seedlist, split_cond_plots = T, 
           tmm_path = "DEseq2_normed/ExcNeurons_cogdxControls_condCovs_filtered1counts10prcntCells_deseq.csv",
-          fits_path = "../../../training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_3EG_DeseqNormed/Fits/"                      ){
+          fits_path = "../../../training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_5EG_DeseqNormed_NoTransferFit/Fits/"){
   setwd("~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/")
   rosmap_meta = read.csv("../../../../../scROSMAP/Meta_data/cleaned_rosmap_meta_cogdxConds.csv")
   print(paste("Plotting from", tmm_path))
@@ -128,7 +129,7 @@ plot_exc_neuron_genes = function(seedlist, split_cond_plots = T,
   # fits_path = "../../../training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_3EG_Jun12Redo/Fits/"
   #tmm_path = "ExcNeurons_cellsFiltered1count10percentCells.csv"
   tmm = read_csv(tmm_path)
-  cyc_pred_file = list.files(path = fits_path, pattern = '*Fit_Output_*')
+  cyc_pred_file = list.files(path = fits_path, pattern = '*Fit_Output_[0-9]+')
   cyc_pred = read.csv(paste0(fits_path,cyc_pred_file))
   
   draw_gene_tracings(cyc_pred, tmm, seedlist, split_cond_plots = split_cond_plots)

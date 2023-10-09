@@ -88,6 +88,8 @@ run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, i
   #Pathways, downloaded from MsigDB
   pathways <- c(gmtPathways("./MsigDB_gmts_for_GSEA/c2.cp.kegg.v2023.1.Hs.symbols.gmt")
                 , gmtPathways("./MsigDB_gmts_for_GSEA/h.all.v2023.1.Hs.symbols.gmt"))
+  sleep_wake_pathways = gmtPathways("./MsigDB_gmts_for_GSEA/sleep_wake_pathways_w_all_human_aliases_filtered_to_background_genes.gmt")
+  
   gene_remapping_dict = read.delim("./MsigDB_gmts_for_GSEA/Human_Gene_Symbol_with_Remapping_MSigDB.v2023.1.Hs.chip", sep = '\t')
   setwd(paste(path_to_cyclops_ordering,"diff_rhythms", "fGSEA", "rnk_files", sep = "/"))
   rnk_files = list.files(pattern = ".rnk")
@@ -100,6 +102,10 @@ run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, i
   
   run_fgsea(rnk_files, gene_remapping_dict, pathways)
   
+  if(!(dir.exists(paste(path_to_cyclops_ordering, "diff_rhythms","fGSEA","fGSEA_results_sleep_wake", sep = "/")))){
+    dir.create( paste(path_to_cyclops_ordering,"diff_rhythms", "fGSEA","fGSEA_results_sleep_wake", sep = "/") )
+  }
+  run_fgsea(rnk_files, gene_remapping_dict, sleep_wake_pathways, dir = "fGSEA_results_sleep_wake", max_size = 10000)
   
   ########
   # PSEA #
@@ -163,7 +169,7 @@ run_downstream_analysis = function(path_to_cyclops_ordering, path_to_tmm_file, i
   if (!(dir.exists("diff_rhythms/KEGG_map_diagrams"))){
     dir.create("diff_rhythms/KEGG_map_diagrams")
   }
-  write_kegg_map_files("diff_rhythms/diff_rhythms_AmpRatio1.csv","Log_AD_CTL_ampRatio", entrez_dict)
+  write_kegg_map_files("diff_rhythms/diff_rhythms_AmpRatio25.csv","Log_AD_CTL_ampRatio", trans_dict = entrez_dict,BHQ_cutoff = 0.2)
 }
 
 #Microglia
@@ -176,18 +182,21 @@ run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBon
 
 #Astrocytes
 #path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Astrocytes/Astro_OrderingFromExcitatoryNeuronsErikChenZhangCondCovs3EG_jun12Redo/"
-path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Astrocytes/Deseq_normed_counts/Astro_DeseqNormed_OrderingFromExcitatoryNeuronsErikChenZhangCondCovs3EGDeseqNormed/"
+#path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Astrocytes/Deseq_normed_counts/Astro_DeseqNormed_OrderingFromExcitatoryNeuronsErikChenZhangCondCovs3EGDeseqNormed/"
+path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Astrocytes/Deseq_normed_counts/Astro_CellsFiltered10Percent_IPBulkBHQ1CyclersBHQ1ChenZhang_condCovs_5EG_DeseqNormed_NoTransferFit/"
 # path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/Astrocyte_cellsFiltered1count10percentCells.csv"
 path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/DEseq2_normed/Astrocyte_cogdxControls_condCovs_filtered1counts10prcntCells_deseq.csv"
 deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/Astrocyte_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
-run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.1)
+run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05)
 
 #Excitatory Neurons
 #path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_3EG_Jun12Redo/"
 #path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/ExcNeurons_CellsFiltered10Percent_ErikChenZhang_minCV14_condCovs_5EG/"
 #path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_3EG_DeseqNormed/"
 # path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_5EG_DeseqNormed/"
-path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellsFiltered10Percent_ErikChenZhang_noCovs_5EG_DeseqNormed/"
+#path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellsFiltered10Percent_ErikChenZhang_noCovs_5EG_DeseqNormed/"
+#path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellsFiltered10Percent_ErikChenZhang_noCovs_3EG_DeseqNormed/"
+path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_5EG_DeseqNormed_NoTransferFit/"
 #path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/ExcNeurons_cellsFiltered1count10percentCells.csv"
 path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/DEseq2_normed/ExcNeurons_cogdxControls_condCovs_filtered1counts10prcntCells_deseq.csv"
 deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/ExcitatoryNeurons_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
@@ -202,8 +211,8 @@ deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_different
 run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05)
 
 #Pseudobulk All Celltypes
-path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Pseudobulk/Pseudobulk_1countsIn10Prcnt_OrderedByExcNeuronsCellsFilteredErikChenZhangcondCovs3EG/"
-path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/"
-path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/PseudoBulk_scrosmapALL_cogdxControls_condCovs_filtered1counts10prcntSubs.csv"
+# path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Pseudobulk/Deseq_normed_counts/Pseudobulk_DeseqNormed_OrderedByExcNeurons_ErikChenZhang5EGCondCovsTransferFit/"
+path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Pseudobulk/Deseq_normed_counts/Pseudobulk_DeseqNormed_OrderedByExcNeurons_ErikChenZhang5EGCondCovsNOTransferFit/"
+path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/DEseq2_normed/AllCellPseudobulk_cogdxControls_condCovs_filtered1counts10prcntCells_deseq.csv"
 deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/PseudobulkAllCell_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
 run_downstream_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = 0.05, deseq_de_filename)

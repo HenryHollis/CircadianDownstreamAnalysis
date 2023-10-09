@@ -4,13 +4,13 @@ library(rstudioapi)
 library(data.table)
 library(stringr)
 
-run_fgsea = function(files, gene_dict, pathways, gsea_param = 1){
+run_fgsea = function(files, gene_dict, pathways, gsea_param = 1,max_size = 500, dir = "fGSEA_results"){
   sapply(files, function(file){
-  file_name = paste0("../fGSEA_results/", str_replace(file, ".rnk", "") , ".csv")
+  file_name = paste0("../", dir, "/", str_replace(file, ".rnk", "") , ".csv")
   print(file_name)
   score_type =  ifelse(grepl("minusLogPRanked", file_name) , "pos", "std")
   print(paste("Used", score_type, "fGSEA score type"))
-  plot_name = paste0("../fGSEA_results/plots/", str_replace(file, ".rnk", "") , ".png")
+  plot_name = paste0("../", dir,"/plots/", str_replace(file, ".rnk", "") , ".png")
   
   ranks <- read.table(file, header=F, colClasses = c("character", "numeric"))
   #here I handle remapping my gene symbols to the "chip" file from MsigDB
@@ -29,8 +29,9 @@ run_fgsea = function(files, gene_dict, pathways, gsea_param = 1){
                     minSize  = 5,
                     #eps = 0.0,
                     gseaParam = gsea_param,
-                    maxSize  = 500,
-                    scoreType = score_type)
+                    maxSize  = max_size,
+                    scoreType = score_type,
+                    nPermSimple = 10000)
   
   fgseaRes = fgseaRes %>% arrange(pval)
   fwrite(fgseaRes, file_name)
