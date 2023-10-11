@@ -7,17 +7,211 @@ editor_options:
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+This notebook is for performing downstream analysis of CYCLOPS. It includes running cosinor regression and assessing differential 
+rhythmicity (two ways for both), calling the enrichR API via python, using fgsea in R, running PSEA, outputing files for making KEGG map diagrams, etc.
 
 ```{r Load Libraries, include=FALSE}
 library(reticulate) #use to find conda env for python
 library(tidyverse)
+source("./differential_rhyth_single_cov_for_AnalysisPipeline.R")
+source("./create_rnk_files.R")
+source("./fgsea.R")
+source("./compareRhythms.R")
+source("./Mesor_Venn_Diagram.R")
+source("./Files_for_Pscan.R")
+source("./Make_KEGG_map_files.R")
+source("./Check_TF_for_cycling_or_DR.R")
+source("./fgsea_plot_for_downstream.R")
+```
+This notebook makes use of python via anaconda. Please make sure you install anaconda to proceed:
+```{r}
+conda_list()
+```
+Select your conda environment of choice, in my case, item 2 from list above:
+```{r Select Conda Environment, message=FALSE, warning=FALSE}
+conda_list()[[2]][2] %>% 
+  use_condaenv(required = TRUE)
+```
+Select the CYCLOPS ordering path and path to data file and path to DEseq2 differential expression results:
+```{r}
+path_to_cyclops_ordering = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_5EG_DeseqNormed_NoTransferFit/"
 
+path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/DEseq2_normed/ExcNeurons_cogdxControls_condCovs_filtered1counts10prcntCells_deseq.csv"
+
+deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/ExcitatoryNeurons_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
+
+#Bonferroni corrected p cutoff to be considered cycling in analysis:
+isCyclingBonfCutoff = 0.05
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+Run cosinor regression and differential rhythmicity analysis with custom script and with compareRhythms library. 
+I make use of Ensembl and Entrez IDs so I need the following translation dictionaries:
+```{r Assess rhythmicity and differential rhythmicity, warning=FALSE}
+# read in translation dict between gene symbols and other alias
+  entrez_dict = readxl::read_excel("scROSMAP_ENSEMBL_ENTREZ_dict.xlsx")
+  Ensembl_dict = readxl::read_xlsx("scROSMAP_ENSEMBL_dict.xlsx")
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+  #run custom cycling and differential rhythmicity analysis
+  print("***Running cosinor and differential rhythms analysis***")
+  run_cycling_and_dr_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = isCyclingBonfCutoff)
+  
+  #Run the cycling and DR analysis with CompareRhythms package
+  print("***Running CompareRhythms Package***")
+  run_compare_rhythms(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = isCyclingBonfCutoff)
+  
+```
+Call EnrichR API with python, supplying various lists from cycling and differential rhythm analysis.
+```{r use EnrichR API via python, warning=FALSE}
+  path = getwd()
+  setwd(paste0(path_to_cyclops_ordering, "downstream_output"))
+  path_no_space = gsub(" ", "\\ ", path, fixed = TRUE)
+  
+  #create list of filenames from the enrichR_files subfolder
+  gene_lists = list.files("./enrichR_files/", pattern = "^(CTL_|AD_)")
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+  #run system command to call python script that uses enrichR API
+  sapply(gene_lists, function(x){ 
+    system(paste0("python3 ", path_no_space, "/Python_EnrichR_for_AnalysisPipeline.py -g \"enrichR_files/" ,x, "\" -b \"enrichR_files/EnrichR_background.csv\""))})
+  
+  setwd("enrichR_files/")
+  DR_gene_lists = list.files( pattern = "^(DR_)")
+  CR_files = grepl("COMPARERHYTHMS", DR_gene_lists)
+  DR_backgrounds = paste0("diff_rhythms_AmpRatio", str_replace(str_extract(DR_gene_lists, pattern = "AR\\d+"), "AR", ""), ".csv")
+  DR_backgrounds[CR_files] = "diff_rhythms_AmpRatio25_COMPARERHYTHMS.csv"
+  
+ # repeat with differential gene lists
+  setwd(paste0(path_to_cyclops_ordering, "downstream_output"))
+  mapply(function(x, y){ 
+    system(paste0("python3 ", path_no_space, "/Python_EnrichR_for_AnalysisPipeline.py -g \"enrichR_files/" ,x, "\" -b \"",y , "\""))},
+    DR_gene_lists, 
+    DR_backgrounds)
+  
+  #AD severity
+  system(paste0("python3 ", path_no_space, "/Python_EnrichR_for_AnalysisPipeline.py -g \"enrichR_files/strong_cogdx_diffs_AR25.csv\" -b \"enrichR_files/AD_cyclers_AR25Bonf05.csv\""))
+```
+
+Below is the fGSEA analysis:
+```{r fGSEA for cycling and DR genes}
+path = getwd()
+setwd(path_to_cyclops_ordering)
+if (!(dir.exists("downstream_output/fGSEA"))){
+  dir.create("downstream_output/fGSEA")
+  dir.create(paste("downstream_output", "fGSEA", "rnk_files", sep = "/"))
+  dir.create(paste("downstream_output" , "fGSEA", "fGSEA_results", sep = "/"))
+}
+
+
+#create rnk files
+write_rnks(path_to_cyclops_ordering)
+
+#path of parent folder
+setwd(path)
+
+#Pathways, downloaded from MsigDB
+pathways <- c(gmtPathways("./MsigDB_gmts_for_GSEA/c2.cp.kegg.v2023.1.Hs.symbols.gmt")
+              , gmtPathways("./MsigDB_gmts_for_GSEA/h.all.v2023.1.Hs.symbols.gmt"))
+
+
+gene_remapping_dict = read.delim("./MsigDB_gmts_for_GSEA/Human_Gene_Symbol_with_Remapping_MSigDB.v2023.1.Hs.chip", sep = '\t')
+setwd(paste(path_to_cyclops_ordering,"downstream_output", "fGSEA", "rnk_files", sep = "/"))
+rnk_files = list.files(pattern = ".rnk")
+
+
+if(!(dir.exists(paste(path_to_cyclops_ordering, "downstream_output","fGSEA","fGSEA_results", sep = "/")))){
+  dir.create( paste(path_to_cyclops_ordering,"downstream_output", "fGSEA","fGSEA_results", sep = "/") )
+  dir.create( paste(path_to_cyclops_ordering,"downstream_output", "fGSEA","fGSEA_results", "plots",sep = "/"))
+}
+
+run_fgsea(rnk_files, gene_remapping_dict, pathways)
+
+
+```
+Run fgsea on sleep related pathways from https://doi.org/10.1152/physiolgenomics.00275.2006
+```{r}
+sleep_wake_pathways = gmtPathways("./MsigDB_gmts_for_GSEA/sleep_wake_pathways_w_all_human_aliases_filtered_to_background_genes.gmt")
+
+if(!(dir.exists(paste(path_to_cyclops_ordering, "downstream_output","fGSEA","fGSEA_results_sleep_wake", sep = "/")))){
+    dir.create( paste(path_to_cyclops_ordering,"downstream_output", "fGSEA","fGSEA_results_sleep_wake", sep = "/") )
+    dir.create( paste(path_to_cyclops_ordering,"downstream_output", "fGSEA","fGSEA_results_sleep_wake", "plots", sep = "/") )
+}
+  setwd(paste(path_to_cyclops_ordering,"downstream_output", "fGSEA", "rnk_files", sep = "/"))
+
+  run_fgsea(rnk_files, gene_remapping_dict, sleep_wake_pathways, dir = "fGSEA_results_sleep_wake", max_size = 10000)
+  
+```
+Run Phase Set Enrichment Analysis (PSEA):
+```{r PSEA}
+
+  # List of pathways, downloaded from MsigDB, absolute paths
+  psea_pathways <- c(paste0(getwd(), "/MsigDB_gmts_for_GSEA/c2.cp.kegg.v2023.1.Hs.symbols.gmt")
+                , paste0(getwd(), "/MsigDB_gmts_for_GSEA/h.all.v2023.1.Hs.symbols.gmt"))
+  
+  # make sure no spaces when calling cmd
+  psea_pathways = gsub(" ", "\\ ", psea_pathways, fixed = TRUE) 
+  
+  # change dir into PSEA directory
+  setwd(paste(path_to_cyclops_ordering,"downstream_output", "PSEA_files",sep = "/"))
+  
+  #list PSEA input files (generated during cosinor regression/DR step)
+  psea_files = list.files(pattern = "*.txt")
+  
+  #Save path to ordering as string for cleaning up call to system
+  path_to_cyclops_ordering_no_space = gsub(" ", "\\ ", path_to_cyclops_ordering, fixed = TRUE)
+
+  #dataframe where rows are arguments to system, I will apply system call across rows
+  arg_df = expand.grid(psea_files, psea_pathways)%>% 
+                mutate(out_dirs = paste(str_extract(string = as.character(Var1), pattern= ".+(?=\\.txt)"), 
+                                     basename(as.character(Var2)) %>% str_extract(pattern= ".+(?=\\.gmt)")%>% 
+                gsub(pattern = "\\.", replacement = ""), sep = "_") )
+  #apply system call, calling PSEA jar file, using rows of arg_df as arguments.
+  apply(arg_df, 1,
+        function(a){
+          system(paste0("java -jar ", path_no_space, "/PSEA_cmd.jar ", paste0(path_to_cyclops_ordering_no_space, "/downstream_output/PSEA_files/", a[[1]]), " ", a[[2]]," ", paste0(path_to_cyclops_ordering_no_space, "/downstream_output/PSEA_files/", a[[3]]), " 5 10000 pdf"))
+          })
+```
+Now I search for transcription factors associated with my various gene lists, 
+i.e, TF's associated with genes that lose amplitude in AD...
+```{r PSCAN}
+
+#create pscan dir if does not exist:
+if(!(dir.exists(paste0(path_to_cyclops_ordering, "downstream_output/pscan")))){
+  dir.create(paste0(path_to_cyclops_ordering, "downstream_output/pscan") )
+}
+setwd(paste0(path_to_cyclops_ordering, "downstream_output"))
+
+#grab gene lists from enrichR files directory
+gene_lists = list.files("./enrichR_files/", pattern = "^(CTL_|AD_|DR_)") 
+
+#write pscan input
+lapply(gene_lists, write_pscan_input)
+path_no_space = gsub(" ", "\\ ", path, fixed = TRUE)
+
+setwd("pscan/")
+pscan_files = list.files("./pscan_files/", pattern = ".csv$") 
+
+sapply(pscan_files, function(x){ 
+  system(paste0("python3 ", path_no_space, "/pscan_requests.py --file pscan_files/" ,x))})
+
+if(!is.null(deseq_de_filename)){
+  setwd("pscan_results")
+  pscan_result_files = list.files(pattern = ".csv$")
+  print("Searching cycling and DR results for pscan TF")
+  sapply(pscan_result_files, augment_tf_file, deseq_de_filename)
+  setwd(paste0(path_to_cyclops_ordering, "downstream_output/enrichR_results"))
+  directories = list.files()
+  enrichR_TF_paths <- lapply(directories, function(dir) list.files(dir, full.names = TRUE, recursive = TRUE, pattern = ".*TRANSFACandJASPARPWMs_BCKGRND.*\\.csv|.*TranscriptionFactorPPIs_BCKGRND.*\\.csv"))
+  enrichR_TF_paths = flatten(enrichR_TF_paths) %>% paste0("./", .)  
+  sapply(enrichR_TF_paths, augment_tf_file, deseq_de_filename)
+  
+  }
+
+```
+Write Files for Kegg Pathway Diagrams:
+```{r}
+
+if (!(dir.exists("downstream_output/KEGG_map_diagrams"))){
+  dir.create("downstream_output/KEGG_map_diagrams")
+}
+write_kegg_map_files("downstream_output/diff_rhythms_AmpRatio25.csv","Log_AD_CTL_ampRatio", trans_dict = entrez_dict,BHQ_cutoff = 0.2)
+```
 

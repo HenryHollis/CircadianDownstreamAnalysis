@@ -2,11 +2,11 @@ library(tidyverse)
 library(doParallel)
 library(progress)
 
-blunt_outliers = function(vec){
+blunt_outliers = function(vec, percentile = 0.025){
   num =length(which(!is.na(vec)))
   ord = sort(vec)
-  upper_val = ord[as.integer(num-num*.025)]
-  lower_val = ord[as.integer(num-num*.975)]
+  upper_val = ord[as.integer(num-num*percentile)]
+  lower_val = ord[as.integer(num-num*(1 - percentile))]
   
   vec[which(vec > upper_val)] = upper_val
   vec[which(vec < lower_val)] = lower_val
@@ -336,8 +336,11 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   seedlist_AR1 = union(strong_cyclers_AD_AR1$Gene_Symbols, strong_cyclers_CTL_AR1$Gene_Symbols)
   
   ##### mesor differences ######
-  pb <- progress_bar$new(total = length(seedlist_AR1))
-  differential_mesorAR1 = mesor_differences(cyc_pred, tmm, seedlist_AR1, pb = pb)
+  gene_list_mesor =  unlist(unname(tmm[!grepl("_D", unlist(tmm[,1])), 1])) # TEST ALL genes for Mesor diff (not just cyclers)
+  pb <- progress_bar$new(total = length(gene_list_mesor))
+  differential_mesor = mesor_differences(cyc_pred, tmm, gene_list_mesor, pb = pb)
+  Ensembl = Ensembl_dict$ENSEMBL[match(differential_mesor$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
+  differential_mesor = cbind(Ensembl, differential_mesor) 
   
   ####### differential rhtyhms with continuous cerad covs####
   diff_rhythms_AD_severity = diff_rhyth_AD_severity(cyc_pred, tmm,
@@ -398,56 +401,73 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   DR_gainAmpAD_AR1BHQ1 = filter(diff_rhythms1, BHQ < 0.1, Log_AD_CTL_ampRatio > 0) %>% dplyr::select(Ensembl, Gene_Symbols)
   
   
-  if (!(dir.exists(paste(order_path, "diff_rhythms", sep = '/')))){
-    dir.create(paste(order_path, "diff_rhythms", sep = '/'))
-    dir.create(paste(order_path, "diff_rhythms", "enrichR_results", sep = '/'))
-    dir.create(paste(order_path, "diff_rhythms", "enrichR_files", sep = '/'))
-    dir.create(paste(order_path, "diff_rhythms", "PSEA_files", sep = '/'))
+  if (!(dir.exists(paste(order_path, "downstream_output", sep = '/')))){
+    dir.create(paste(order_path, "downstream_output", sep = '/'))
+    dir.create(paste(order_path, "downstream_output", "enrichR_results", sep = '/'))
+    dir.create(paste(order_path, "downstream_output", "enrichR_files", sep = '/'))
+    dir.create(paste(order_path, "downstream_output", "PSEA_files", sep = '/'))
     
   }
   #Create string for isCyclingBonfCutoff.  E.g. 0.05 -> "05"
   isCyclingBonfCutoff_str = str_extract(as.character(isCyclingBonfCutoff), "(?<=\\.)\\d+")
   
   #write out all results of cycling and DR analysis
-  write.table(diff_rhythms25, paste(order_path, "diff_rhythms","diff_rhythms_AmpRatio25.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(diff_rhythms33, paste(order_path, "diff_rhythms","diff_rhythms_AmpRatio33.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(diff_rhythms1, paste(order_path, "diff_rhythms","diff_rhythms_AmpRatio1.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(cycling_in_CTL, paste(order_path, "diff_rhythms","cosinor_results_CTL.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(cycling_in_AD, paste(order_path, "diff_rhythms","cosinor_results_AD.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(diff_rhythms25, paste(order_path, "downstream_output","diff_rhythms_AmpRatio25.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(diff_rhythms33, paste(order_path, "downstream_output","diff_rhythms_AmpRatio33.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(diff_rhythms1, paste(order_path, "downstream_output","diff_rhythms_AmpRatio1.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(cycling_in_CTL, paste(order_path, "downstream_output","cosinor_results_CTL.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(cycling_in_AD, paste(order_path, "downstream_output","cosinor_results_AD.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
   #gene lists for enrichR
-  write.table(CTL_cyclers_AR25BonfCutoff, paste0(order_path, "diff_rhythms/enrichR_files/CTL_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
-  write.table(CTL_cyclers_AR33BonfCutoff, paste0(order_path, "diff_rhythms/enrichR_files/CTL_cyclers_AR33Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
-  write.table(AD_cyclers_AR25BonfCutoff, paste0(order_path, "diff_rhythms/enrichR_files/AD_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
-  write.table(AD_cyclers_AR33BonfCutoff, paste0(order_path, "diff_rhythms/enrichR_files/AD_cyclers_AR33Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
+  write.table(CTL_cyclers_AR25BonfCutoff, paste0(order_path, "downstream_output/enrichR_files/CTL_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
+  write.table(CTL_cyclers_AR33BonfCutoff, paste0(order_path, "downstream_output/enrichR_files/CTL_cyclers_AR33Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
+  write.table(AD_cyclers_AR25BonfCutoff, paste0(order_path, "downstream_output/enrichR_files/AD_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
+  write.table(AD_cyclers_AR33BonfCutoff, paste0(order_path, "downstream_output/enrichR_files/AD_cyclers_AR33Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
   #background genes for enrichR
-  write.table(EnrichR_background, paste(order_path, "diff_rhythms", "enrichR_files","EnrichR_background.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(EnrichR_background, paste(order_path, "downstream_output", "enrichR_files","EnrichR_background.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
   #DR genes for enrichR
-  write.table(DR_cyclers_AR33BHQ2, paste(order_path, "diff_rhythms", "enrichR_files","DR_cyclers_AR33BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(DR_cyclers_AR25BHQ2, paste(order_path, "diff_rhythms", "enrichR_files","DR_cyclers_AR25BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(DR_cyclers_AR1BHQ1, paste(order_path, "diff_rhythms", "enrichR_files","DR_cyclers_AR1BHQ1.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(DR_lostAmpAD_AR33BHQ2, paste(order_path, "diff_rhythms", "enrichR_files","DR_lostAmpAD_AR33BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(DR_lostAmpAD_AR25BHQ2, paste(order_path, "diff_rhythms", "enrichR_files","DR_lostAmpAD_AR25BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(DR_lostAmpAD_AR1BHQ1, paste(order_path, "diff_rhythms", "enrichR_files","DR_lostAmpAD_AR1BHQ1.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(DR_gainAmpAD_AR33BHQ2, paste(order_path, "diff_rhythms", "enrichR_files","DR_gainAmpAD_AR33BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(DR_gainAmpAD_AR25BHQ2, paste(order_path, "diff_rhythms", "enrichR_files","DR_gainAmpAD_AR25BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
-  write.table(DR_gainAmpAD_AR1BHQ1, paste(order_path, "diff_rhythms", "enrichR_files","DR_gainAmpAD_AR1BHQ1.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(DR_cyclers_AR33BHQ2, paste(order_path, "downstream_output", "enrichR_files","DR_cyclers_AR33BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(DR_cyclers_AR25BHQ2, paste(order_path, "downstream_output", "enrichR_files","DR_cyclers_AR25BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(DR_cyclers_AR1BHQ1, paste(order_path, "downstream_output", "enrichR_files","DR_cyclers_AR1BHQ1.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(DR_lostAmpAD_AR33BHQ2, paste(order_path, "downstream_output", "enrichR_files","DR_lostAmpAD_AR33BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(DR_lostAmpAD_AR25BHQ2, paste(order_path, "downstream_output", "enrichR_files","DR_lostAmpAD_AR25BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(DR_lostAmpAD_AR1BHQ1, paste(order_path, "downstream_output", "enrichR_files","DR_lostAmpAD_AR1BHQ1.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(DR_gainAmpAD_AR33BHQ2, paste(order_path, "downstream_output", "enrichR_files","DR_gainAmpAD_AR33BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(DR_gainAmpAD_AR25BHQ2, paste(order_path, "downstream_output", "enrichR_files","DR_gainAmpAD_AR25BHQ2.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  write.table(DR_gainAmpAD_AR1BHQ1, paste(order_path, "downstream_output", "enrichR_files","DR_gainAmpAD_AR1BHQ1.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
   #Mesor differences
-  write.table(differential_mesorAR1, paste(order_path, "diff_rhythms", "differential_mesor_AR1.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
+  write.table(differential_mesor, paste(order_path, "downstream_output", "differential_mesor_all_genes.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
+  sig_diff_mesor = filter(differential_mesor, as.numeric(Bonf) < 0.05 ) %>% select( Ensembl, Gene_Symbols)
+  write.table(sig_diff_mesor, paste(order_path, "downstream_output","enrichR_files","diff_mesor_all_genes_Bonf05.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
   
   #Continuous AD differences
-  write.table(diff_rhythms_AD_severity, paste(order_path, "diff_rhythms", "diff_rhythms_AD_severity_AR25.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
+  write.table(diff_rhythms_AD_severity, paste(order_path, "downstream_output", "diff_rhythms_AD_severity_AR25.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
   strong_cogdx_diffs = filter(diff_rhythms_AD_severity, BHQ_cogdx< 0.1) %>% dplyr::select(Gene_Symbols)
   Ensembl = Ensembl_dict$ENSEMBL[match(strong_cogdx_diffs$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
   strong_cogdx_diffs = cbind(Ensembl, strong_cogdx_diffs) %>% dplyr::select(Ensembl , Gene_Symbols )
-  write.table(strong_cogdx_diffs, paste(order_path, "diff_rhythms", "enrichR_files", "strong_cogdx_diffs_AR25.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
+  write.table(strong_cogdx_diffs, paste(order_path, "downstream_output", "enrichR_files", "strong_cogdx_diffs_AR25.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
   
   #create lists of genes for PSEA
   PSEA_CTL_cyclers_AR25BonfCutoff = strong_cyclers_CTL_AR25 %>% dplyr::select(Gene_Symbols, acrophase ) %>% mutate(acrophase = as.numeric(acrophase) * 12 / pi)
-  write.table(PSEA_CTL_cyclers_AR25BonfCutoff, paste0(order_path, "diff_rhythms/PSEA_files/PSEA_CTL_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".txt"), sep = '\t', row.names = F, col.names = F, quote = F)
+  write.table(PSEA_CTL_cyclers_AR25BonfCutoff, paste0(order_path, "downstream_output/PSEA_files/PSEA_CTL_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".txt"), sep = '\t', row.names = F, col.names = F, quote = F)
   PSEA_AD_cyclers_AR25BonfCutoff = strong_cyclers_AD_AR25 %>% dplyr::select(Gene_Symbols, acrophase ) %>% mutate(acrophase = as.numeric(acrophase) * 12 / pi)
-  write.table(PSEA_AD_cyclers_AR25BonfCutoff, paste0(order_path, "diff_rhythms/PSEA_files/PSEA_AD_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".txt"), sep = '\t', row.names = F, col.names = F, quote = F)
+  write.table(PSEA_AD_cyclers_AR25BonfCutoff, paste0(order_path, "downstream_output/PSEA_files/PSEA_AD_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".txt"), sep = '\t', row.names = F, col.names = F, quote = F)
   PSEA_DR_AR25BHQ2_acrodiffs = DR_cyclers_AR25BHQ2 %>% mutate(acro_diff = (as.numeric(acrophase_AD) - as.numeric(acrophase_CTL))*12/pi ) %>%
     dplyr::select(Gene_Symbols, acro_diff)
-  write.table(PSEA_DR_AR25BHQ2_acrodiffs, paste0(order_path, "diff_rhythms/PSEA_files/PSEA_DR_AR25BHQ2_acrodiffs.txt"), sep = '\t', row.names = F, col.names = F, quote = F)
+  write.table(PSEA_DR_AR25BHQ2_acrodiffs, paste0(order_path, "downstream_output/PSEA_files/PSEA_DR_AR25BHQ2_acrodiffs.txt"), sep = '\t', row.names = F, col.names = F, quote = F)
+  
+  #write out nice summary of cycling and DR genes
+  summary = data.frame(List = c(paste0("CTL_cyclers_AR25Bonf", isCyclingBonfCutoff_str), paste0("CTL_cyclers_AR33Bonf", isCyclingBonfCutoff_str),
+      paste0("AD_cyclers_AR25Bonf", isCyclingBonfCutoff_str), paste0("AD_cyclers_AR33Bonf", isCyclingBonfCutoff_str),
+      "DR_cyclers_AR1BHQ1", "DR_cyclers_AR25BHQ2", "DR_cyclers_AR33BHQ2",
+      "DR_lostAmpAD_AR1BHQ1", "DR_lostAmpAD_AR25BHQ2", "DR_lostAmpAD_AR33BHQ2",
+      "DR_gainAmpAD_AR1BHQ1", "DR_gainAmpAD_AR25BHQ2", "DR_gainAmpAD_AR33BHQ2"), 
+      Num_genes = c(dim(CTL_cyclers_AR25BonfCutoff)[1], dim(CTL_cyclers_AR33BonfCutoff)[1],
+      dim(AD_cyclers_AR25BonfCutoff)[1],dim(AD_cyclers_AR33BonfCutoff)[1],
+      dim(DR_cyclers_AR1BHQ1)[1],dim(DR_cyclers_AR25BHQ2)[1], dim(DR_cyclers_AR33BHQ2)[1],
+      dim(DR_lostAmpAD_AR1BHQ1)[1], dim(DR_lostAmpAD_AR25BHQ2)[1],dim(DR_lostAmpAD_AR33BHQ2)[1], 
+      dim(DR_gainAmpAD_AR1BHQ1)[1], dim(DR_gainAmpAD_AR25BHQ2)[1], dim(DR_gainAmpAD_AR33BHQ2)[1])
+  )
+  write.table(summary, paste(order_path, "downstream_output","cosinor_DR_summary.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
+  
   
 }

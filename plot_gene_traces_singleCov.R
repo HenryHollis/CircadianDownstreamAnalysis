@@ -2,15 +2,18 @@ library(tidyverse)
 library(doParallel)
 library(gridExtra)
 
-blunt_outliers = function(vec){
-  num = length(which(!is.na(vec)))
+blunt_outliers = function(vec, percentile = 0.025){
+  num =length(which(!is.na(vec)))
   ord = sort(vec)
-  upper_val = ord[as.integer(num-num*.025)]
-  lower_val = ord[as.integer(num-num*.975)]
+  upper_val = ord[as.integer(num-num*percentile)]
+  lower_val = ord[as.integer(num-num*(1 - percentile))]
+  
   vec[which(vec > upper_val)] = upper_val
   vec[which(vec < lower_val)] = lower_val
   return(vec)
 }
+
+
 
 draw_gene_tracings = function(cyc_pred, tmm, seedlist, savePlots = F, split_cond_plots = T){
  
