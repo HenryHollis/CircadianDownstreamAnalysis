@@ -5,7 +5,7 @@ write_pscan_input = function(file){
     dir.create( "pscan/pscan_files" )
   }
   outfile_name = paste0(str_replace(file, ".csv", ""), "_pscan.csv")
-  gene_list = read_csv(paste0(path_to_cyclops_ordering, "downstream_output/enrichR_files/", file))
+  gene_list = read_csv(paste0(path_to_cyclops_ordering, "downstream_output/enrichR_files/", file), show_col_types = FALSE)
   if (nrow(gene_list) > 1){
     gene_list = dplyr::select(gene_list, Gene_Symbols) %>%unname %>% unlist
     library(org.Hs.eg.db)

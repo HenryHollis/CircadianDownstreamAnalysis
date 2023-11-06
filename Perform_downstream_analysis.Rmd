@@ -61,13 +61,13 @@ I make use of Ensembl and Entrez IDs so I need the following translation diction
   
 ```
 Call EnrichR API with python, supplying various lists from cycling and differential rhythm analysis.
-```{r use EnrichR API via python, warning=FALSE}
+```{r use EnrichR API via python, warning=FALSE, include=FALSE}
   path = getwd()
   setwd(paste0(path_to_cyclops_ordering, "downstream_output"))
   path_no_space = gsub(" ", "\\ ", path, fixed = TRUE)
   
   #create list of filenames from the enrichR_files subfolder
-  gene_lists = list.files("./enrichR_files/", pattern = "^(CTL_|AD_)")
+  gene_lists = list.files("./enrichR_files/", pattern = "^(CTL_|AD_|diff_mesor)")
 
   #run system command to call python script that uses enrichR API
   sapply(gene_lists, function(x){ 

@@ -3,8 +3,8 @@
 # Script for taking a df containing TF_names (from pscan but also enrichR results),
 # and checking if they are found in DE, DE, DM, cycling files. 
 library(ggrepel)
-
-augment_tf_file = function(TF_filename, deseq_filename){
+library(tidyverse)
+augment_tf_file = function(TF_filename, deseq_filename, isCyclingBonfCutoff_str){
   current_dir = getwd()
   TF_file = read.csv(TF_filename)
   if (colnames(TF_file)[1]== "Rank"){ #if file comes from enrichR, make it look like pscan
@@ -16,25 +16,28 @@ augment_tf_file = function(TF_filename, deseq_filename){
     
   }
   DEseq_toptags = read.csv(deseq_filename)
-  DR_AR1 = read.csv(paste0(path_to_cyclops_ordering, "diff_rhythms/diff_rhythms_AmpRatio1.csv"))
-  cycling_CTL = read.csv(paste0(path_to_cyclops_ordering, "diff_rhythms/cosinor_results_CTL.csv"))
-  cycling_AD = read.csv(paste0(path_to_cyclops_ordering, "diff_rhythms/cosinor_results_AD.csv"))
-  Diff_mesor = read.csv(paste0(path_to_cyclops_ordering, "diff_rhythms/differential_mesor_AR1.csv"))
+
+  DR_AR1_mthd2 = read.csv(paste0(path_to_cyclops_ordering, "/downstream_output/diff_rhythms_method2_CyclingBonf",isCyclingBonfCutoff_str,"AmpRatio1.csv"))
+  DR_AR1 = read.csv(paste0(path_to_cyclops_ordering, "/downstream_output/diff_rhythms_CyclingBonf",isCyclingBonfCutoff_str,"AmpRatio1.csv"))
+  cycling_CTL = read.csv(paste0(path_to_cyclops_ordering, "/downstream_output/cosinor_results_CTL.csv"))
+  cycling_AD = read.csv(paste0(path_to_cyclops_ordering, "/downstream_output/cosinor_results_AD.csv"))
+  mesor_file = list.files(path = paste0(path_to_cyclops_ordering, "/downstream_output") ,pattern = "\\.*mesor.*.csv$")
+  Diff_mesor = read.csv(paste0(path_to_cyclops_ordering, "/downstream_output/", mesor_file))
     
+  #Look for the TF name in the files above
   TF_file$cycling_in_CTL_BHQ = cycling_CTL$BHQ[match(toupper(TF_file$TF_NAME), cycling_CTL$Gene_Symbols)]
   TF_file$cycling_in_AD_BHQ = cycling_AD$BHQ[match(toupper(TF_file$TF_NAME), cycling_AD$Gene_Symbols)]
-  TF_file$DR_AR1_BHQ = DR_AR1$BHQ[match(toupper(TF_file$TF_NAME), DR_AR1$Gene_Symbols)] 
+  TF_file$DR_AR1_BHQ = DR_AR1$BHQ[match(toupper(TF_file$TF_NAME), DR_AR1$Gene_Symbols)]
+  TF_file$DR_AR1_mthd2_BHQ = DR_AR1_mthd2$BHQ[match(toupper(TF_file$TF_NAME), DR_AR1_mthd2$Gene_Symbols)]
   TF_file$DR_logAmpRatio = DR_AR1$Log_AD_CTL_ampRatio[match(toupper(TF_file$TF_NAME), DR_AR1$Gene_Symbols)] 
   TF_file$diff_mesor_AR1 = Diff_mesor$BHQ[match(toupper(TF_file$TF_NAME), Diff_mesor$Gene_Symbols)]
-  TF_file$DEseq_DE_BHQ = DEseq_toptags$padj[match(toupper(TF_file$TF_NAME), DEseq_toptags$X)] 
+  TF_file$DEseq_DE_BHQ = DEseq_toptags$FDR[match(toupper(TF_file$TF_NAME), DEseq_toptags$X)] 
   
   write.table(TF_file, TF_filename, row.names = F, col.names = T, sep = ',')
-  
-  DR_tfs = filter(TF_file, FDR < 0.1 & DR_AR1_BHQ < 0.2) 
-  cycling_CTL_tfs = filter(TF_file, FDR < 0.1 & cycling_in_CTL_BHQ < 0.1) 
-  cycling_AD_tfs = filter(TF_file, FDR < 0.1 & cycling_in_AD_BHQ < 0.1)
-  DE_tfs = filter(TF_file, FDR < 0.1 & DEseq_DE_BHQ < 0.1) 
-  
+  DR_tfs = dplyr::filter(TF_file, FDR < 0.1 & DR_AR1_BHQ < 0.2) 
+  cycling_CTL_tfs = dplyr::filter(TF_file, FDR < 0.1 & cycling_in_CTL_BHQ < 0.1) 
+  cycling_AD_tfs = dplyr::filter(TF_file, FDR < 0.1 & cycling_in_AD_BHQ < 0.1)
+  DE_tfs = dplyr::filter(TF_file, FDR < 0.1 & DEseq_DE_BHQ < 0.1) 
   if(!(dir.exists(paste0(tools::file_path_sans_ext(TF_filename), "_plots")))){
     dir.create(paste0(tools::file_path_sans_ext(TF_filename), "_plots"))
   }

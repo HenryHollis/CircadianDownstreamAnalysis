@@ -7,19 +7,6 @@ library(compareRhythms)
 ## I stopped blunting outliers for compareRhythms because 
 ## logging data is already doing that
 
-# plot_CR_gene = function(datamat, exp_mat, gene){
-#   order = order(exp_mat$time)
-#   exp_mat = exp_mat[order,]
-#   datamat = datamat[,order]
-#   
-#   I = exp_mat$group
-#   times = exp_mat$time
-#   i= which(rownames(datamat) == gene)
-#   df = data.frame(gexp = datamat[i, ], time = times, cond = I)
-#   ggplot(df)+geom_point(aes(times, gexp, color = cond))+
-#     facet_wrap(~ cond, nrow = 2)+
-#     labs(title = paste(rownames(datamat)[i]))
-# }
 # blunt_outliers = function(vec, percentile = 0.025){
 #   num =length(which(!is.na(vec)))
 #   blunt_n_points = round(percentile * num, 0)
@@ -41,7 +28,7 @@ fit = list.files(pattern = "Fit_Output")
 cyclops_ordering = read_csv(fit)
 times = cyclops_ordering$Phase * 12 / pi
 
-emat = TMM[!grepl("_D", unlist(TMM[,1])),]
+emat = TMM[!grepl("_D", unlist(TMM[,1])), ]
 emat = apply(emat[,-1], 2, as.numeric)
 # emat = t(apply(emat, 1, blunt_outliers))
 
@@ -49,8 +36,10 @@ rownames(emat) = TMM[!grepl("_D", unlist(TMM[,1])), 1] %>% unlist
 cond = as.factor(as.character(TMM[1,-1]))
 cond = relevel(cond, "cond_0")
 
+batch = as.factor(as.character(TMM[2,-1]))
+batch = relevel(batch, "cond_[10,64)")
 
-exp_design = data.frame(group = cond, time = times)
+exp_design = data.frame(group = cond, batch = batch, time = times)
 logged_emat = log2(emat+1) #add one to keep in domain of Log
 
 print(paste("Running CompareRhythms with isCyclingBonfCutoff =", isCyclingBonfCutoff))

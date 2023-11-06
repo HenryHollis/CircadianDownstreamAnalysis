@@ -47,26 +47,26 @@ run_fgsea = function(files, gene_dict, pathways, gsea_param = 1,max_size = 500, 
   ggsave(plot_name, p, bg = 'white')
   
   
-  #if the rnk was ranked by -log(p), only the positive enriched pathways are important:
-  if (grepl("minusLogPRanked", file_name, ignore.case = T)){
-    p1 = fgsea_dotplot(fgseaRes,enrichment = "pos" , my_title = paste(tools::file_path_sans_ext(file), "pos enriched pathways"))
-    plot_name2 = paste0("../", dir,"/plots/", str_replace(file, ".rnk", "") , "_dotplot",".png")
-    ggsave(plot_name2, p1, bg = 'white')
-    
-    # if the rnk was ranked by log(ad_amp/ctl_amp), we want both pathways
-  }else{
-    if (!purrr::is_empty(topPathwaysUp)){
-      p2 = fgsea_dotplot(fgseaRes,enrichment = "pos" ,my_title = paste(tools::file_path_sans_ext(file), "pos enriched pathways"))
-      plot_name2 = paste0("../", dir,"/plots/", str_replace(file, ".rnk", "") , "_posEnrichment_dotplot",".png")
-      ggsave(plot_name2, p2, bg = 'white')
-    }
-    if (!purrr::is_empty(topPathwaysDown)){
-      p3 = fgsea_dotplot(fgseaRes,enrichment = "neg" ,my_title = paste(tools::file_path_sans_ext(file), "neg enriched pathways"))
-      plot_name3 = paste0("../", dir,"/plots/", str_replace(file, ".rnk", "") , "_negEnrichment_dotplot",".png")
-      ggsave(plot_name3, p3, bg = 'white')
-    }
-  }
-  
+  # #if the rnk was ranked by -log(p), only the positive enriched pathways are important:
+  # if (grepl("minusLogPRanked", file_name, ignore.case = T)){
+  #   p1 = fgsea_dotplot(fgseaRes,enrichment = "pos" , my_title = paste(tools::file_path_sans_ext(file), "pos enriched pathways"))
+  #   plot_name2 = paste0("../", dir,"/plots/", str_replace(file, ".rnk", "") , "_dotplot",".png")
+  #   ggsave(plot_name2, p1, bg = 'white')
+  # 
+  #   # if the rnk was ranked by log(ad_amp/ctl_amp), we want both pathways
+  # }else{
+  #   if (!purrr::is_empty(topPathwaysUp)){
+  #     p2 = fgsea_dotplot(fgseaRes,enrichment = "pos" ,my_title = paste(tools::file_path_sans_ext(file), "pos enriched pathways"))
+  #     plot_name2 = paste0("../", dir,"/plots/", str_replace(file, ".rnk", "") , "_posEnrichment_dotplot",".png")
+  #     ggsave(plot_name2, p2, bg = 'white')
+  #   }
+  #   if (!purrr::is_empty(topPathwaysDown)){
+  #     p3 = fgsea_dotplot(fgseaRes,enrichment = "neg" ,my_title = paste(tools::file_path_sans_ext(file), "neg enriched pathways"))
+  #     plot_name3 = paste0("../", dir,"/plots/", str_replace(file, ".rnk", "") , "_negEnrichment_dotplot",".png")
+  #     ggsave(plot_name3, p3, bg = 'white')
+  #   }
+  # }
+  # 
 })
 }
 

@@ -4,9 +4,10 @@ library(gridExtra)
 
 blunt_outliers = function(vec, percentile = 0.025){
   num =length(which(!is.na(vec)))
+  blunt_n_points = round(percentile * num, 0)
   ord = sort(vec)
-  upper_val = ord[as.integer(num-num*percentile)]
-  lower_val = ord[as.integer(num-num*(1 - percentile))]
+  upper_val = ord[num -blunt_n_points]
+  lower_val = ord[blunt_n_points+1]
   
   vec[which(vec > upper_val)] = upper_val
   vec[which(vec < lower_val)] = lower_val
@@ -15,7 +16,8 @@ blunt_outliers = function(vec, percentile = 0.025){
 
 
 
-draw_gene_tracings = function(cyc_pred, tmm, seedlist, savePlots = F, split_cond_plots = T){
+
+draw_gene_tracings = function(cyc_pred, tmm, seedlist, savePlots = F, split_cond_plots = T, percentile = 0.025){
  
   #cyc_pred$pmi = rosmap_meta$pmi[match(cyc_pred$ID, rosmap_meta$projid)]
   #mouse_path = list.files(fits_path, pattern = "Mouse_Atlas_*")
@@ -51,7 +53,7 @@ draw_gene_tracings = function(cyc_pred, tmm, seedlist, savePlots = F, split_cond
       gexp1 = gexp1[-rm_gexp1]
       times1 = times1[-rm_gexp1]
     }
-    gexp1 = blunt_outliers(gexp1)
+    gexp1 = blunt_outliers(gexp1, percentile = percentile)
  
     #pmi1 = as.factor(preds_AD$pmi < 20)
     partial_model1 = lm(gexp1 ~ 1)
@@ -70,7 +72,7 @@ draw_gene_tracings = function(cyc_pred, tmm, seedlist, savePlots = F, split_cond
       gexp2 = gexp2[-rm_gexp2]
       times2 = times2[-rm_gexp2]
     }
-    gexp2 = blunt_outliers(gexp2)
+    gexp2 = blunt_outliers(gexp2, percentile = percentile)
     #pmi2 = as.factor(preds_N$pmi < 20)
     partial_model2 = lm(gexp2 ~ 1)
     full_model2 = lm(gexp2 ~ sin(times2) + cos(times2) + 1)
@@ -122,7 +124,7 @@ draw_gene_tracings = function(cyc_pred, tmm, seedlist, savePlots = F, split_cond
  
 
 }
-plot_exc_neuron_genes = function(seedlist, split_cond_plots = T, 
+plot_exc_neuron_genes = function(seedlist, split_cond_plots = T, percentile = 0.025,
           tmm_path = "DEseq2_normed/ExcNeurons_cogdxControls_condCovs_filtered1counts10prcntCells_deseq.csv",
           fits_path = "../../../training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_5EG_DeseqNormed_NoTransferFit/Fits/"){
   setwd("~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/")
@@ -135,11 +137,11 @@ plot_exc_neuron_genes = function(seedlist, split_cond_plots = T,
   cyc_pred_file = list.files(path = fits_path, pattern = '*Fit_Output_[0-9]+')
   cyc_pred = read.csv(paste0(fits_path,cyc_pred_file))
   
-  draw_gene_tracings(cyc_pred, tmm, seedlist, split_cond_plots = split_cond_plots)
+  draw_gene_tracings(cyc_pred, tmm, seedlist, split_cond_plots = split_cond_plots , percentile = percentile)
 }
 
 draw_gene_tracings_AD_continuous = function(cyc_pred, tmm, seedlist, savePlots = F,
-                                            rosmap_clin_path){
+                                            rosmap_clin_path, percentile = .025){
   
   ##### read in ROSMAP clin ####
   rosmap_clin = read_csv(rosmap_clin_path)
@@ -179,7 +181,7 @@ draw_gene_tracings_AD_continuous = function(cyc_pred, tmm, seedlist, savePlots =
       I_local = I[-rm_NA]
     }
       
-    gexp1 = blunt_outliers(gexp1)
+    gexp1 = blunt_outliers(gexp1, percentile = percentile)
     partial_model1 = lm(gexp1 ~ sin(times1) + cos(times1) + I_local + 0)
     full_model1 = lm(gexp1 ~ I_local*sin(times1) + I_local*cos(times1) + I_local + 0)
     anova_results1 = anova(partial_model1, full_model1)
