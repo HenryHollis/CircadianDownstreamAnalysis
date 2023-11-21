@@ -41,9 +41,9 @@ mouse_data = data.frame(acrophase = c(0, 0.079063, 0.151440, 2.29555, 2.9090, 2.
                      "Per2", "Cry1", "Rorc", "Nfil3")))
 
 
-plot_clock_face = function(plotname, df_filename, Bonf_cutoff=0.05, amp_ratio_cutoff = 0.1, color = "r"){
+plot_clock_face = function(plotname, df_filename, BHQ_cutoff=0.05, amp_ratio_cutoff = 0.1, color = "r"){
   df = read_csv(df_filename, show_col_types = F)
-  df = dplyr::filter(df, amp_ratio >= amp_ratio_cutoff & Bonf < Bonf_cutoff)
+  df = dplyr::filter(df, amp_ratio >= amp_ratio_cutoff & BHQ < BHQ_cutoff)
   keep_genes = intersect(df$Gene_Symbols, mouse_data$Gene_Symbols)
   #filter out df and mouse list to just the genes in common:
   df = filter(df, Gene_Symbols %in% keep_genes) %>% arrange(Gene_Symbols)
@@ -58,11 +58,11 @@ plot_clock_face = function(plotname, df_filename, Bonf_cutoff=0.05, amp_ratio_cu
     
     julia_call(
       "plot_clock_face",
-      plotname, df$Gene_Symbols, df$phase_MA, mouse_data$Gene_Symbols, mouse_data$acrophase, df$Bonf, df$amp_ratio,
+      plotname, df$Gene_Symbols, df$phase_MA, mouse_data$Gene_Symbols, mouse_data$acrophase, df$BHQ, df$amp_ratio,
       need_return = c("R", "Julia", "None"),
       show_value = F
     ) 
   }else{
-    print("Not enough genes meet cutoffs, change Bonf_cutoff or amp_ratio_cutoff")
+    print("Not enough genes meet cutoffs, change BHQ_cutoff or amp_ratio_cutoff")
   }
 }

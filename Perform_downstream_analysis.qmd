@@ -39,16 +39,16 @@ Select the CYCLOPS ordering path and path to data file and path to DEseq2 differ
 
 ```{r}
 #path to cyclops ordering
-path_to_cyclops_ordering = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/TMMs_w_batch/Exc3and5TMM_OrderedBy_Exc3and5FiltByEdgeRDefaultIpBulkChenZhangCondAndBatchCovs3EGDefaultNoTransferFit/"
+path_to_cyclops_ordering = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Astrocytes/TMMs_w_batch/Astro_FiltByEdgeRDefault_OrderedByExcNeuronsErikChenZhangCondBatchCovs3egNoTransferFit/"
 
 #path to normalized counts
-path_to_tmm_file = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/EdgeR_filt_normed/ExcSubtypes3and5_FiltByExprDefault_TMM_CombatAdjusted.csv"
+path_to_tmm_file = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/EdgeR_filt_normed/Astrocytes_FiltByExprDefault_TMM_combatSeqAdjusted.csv"
 
 # optional path to file containing differential expression results
 deseq_de_filename = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/Astrocytes/Astrocytes_filtByExpr_combatSeq_edgeR_DE_ExactTest.csv"
 
-#Bonferroni corrected p cutoff to be considered cycling in analysis:
-isCyclingBonfCutoff = 0.1
+#BHQ corrected p cutoff to be considered cycling in analysis:
+isCyclingBHQCutoff = 0.1
 percentile = 0.05
 useBatch = F
 ```
@@ -63,12 +63,7 @@ Ensembl_dict = readxl::read_xlsx("scROSMAP_ENSEMBL_dict.xlsx")
 
 #run custom cycling and differential rhythmicity analysis
 print("***Running cosinor and differential rhythms analysis***")
-run_cycling_and_dr_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = isCyclingBonfCutoff, percentile = percentile, useBatch = useBatch)
-
-# #Run the cycling and DR analysis with CompareRhythms package
-# print("***Running CompareRhythms Package***")
-# run_compare_rhythms(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = isCyclingBonfCutoff)
-
+run_cycling_and_dr_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingSigCutoff = isCyclingBHQCutoff, percentile = percentile, useBatch = useBatch)
 ```
 
 ### Plot Clock Face Plots
@@ -84,12 +79,12 @@ if (!(dir.exists("downstream_output/clock_face_plots"))){
 abs_path = str_replace(path_to_cyclops_ordering, "~", "")
 
 #for cycling_in_CTL.csv
-plot_clock_face(paste0(abs_path, "downstream_output/clock_face_plots/CTL_cyclers.png"),"downstream_output/cosinor_results_CTL.csv", Bonf_cutoff = isCyclingBonfCutoff, amp_ratio_cutoff = 0 )
+plot_clock_face(paste0(abs_path, "downstream_output/clock_face_plots/CTL_cyclers.png"),"downstream_output/cosinor_results_CTL.csv", BHQ_cutoff = isCyclingBHQCutoff, amp_ratio_cutoff = 0 )
 
 setwd(path_to_cyclops_ordering)
 
 #for cycling_in_AD.csv
-plot_clock_face(paste0(abs_path, "downstream_output/clock_face_plots/AD_cyclers.png"),"downstream_output/cosinor_results_AD.csv", Bonf_cutoff = isCyclingBonfCutoff, amp_ratio_cutoff = 0)
+plot_clock_face(paste0(abs_path, "downstream_output/clock_face_plots/AD_cyclers.png"),"downstream_output/cosinor_results_AD.csv", BHQ_cutoff = isCyclingBHQCutoff, amp_ratio_cutoff = 0)
 ```
 
 ### EnrichR
@@ -108,16 +103,15 @@ gene_lists = list.files("./enrichR_files/", pattern = "^(CTL_|AD_|diff_mesor)")
 sapply(gene_lists, function(x){ 
   system(paste0("python3 ", path_no_space, "/Python_EnrichR_for_AnalysisPipeline.py -g \"enrichR_files/" ,x, "\" -b \"enrichR_files/EnrichR_background.csv\""))})
 
-#FIXME make sure code below works, I want to change "diff_rhythms_ampratopxx to diff_rhythms_CyclingBonf05ARxx
-isCyclingBonfCutoff_str = str_extract(as.character(isCyclingBonfCutoff), "(?<=\\.)\\d+")
+isCyclingBHQCutoff_str = str_extract(as.character(isCyclingBHQCutoff), "(?<=\\.)\\d+")
 
 setwd("enrichR_files/")
 all_DR_gene_lists = list.files( pattern = "^(DR_)")
 method2_files = grepl("mthd2", all_DR_gene_lists)
 DR_gene_lists_method1 = all_DR_gene_lists[!method2_files]
-DR_backgrounds_method1 = paste0("diff_rhythms_CyclingBonf", isCyclingBonfCutoff_str, "AmpRatio", str_replace(str_extract(DR_gene_lists_method1, pattern = "AR\\d+"), "AR", ""), ".csv")
+DR_backgrounds_method1 = paste0("diff_rhythms_CyclingBHQ", isCyclingBHQCutoff_str, "AmpRatio", str_replace(str_extract(DR_gene_lists_method1, pattern = "AR\\d+"), "AR", ""), ".csv")
 DR_gene_lists_method2 = all_DR_gene_lists[method2_files]
-DR_backgrounds_method2 = paste0("diff_rhythms_method2_CyclingBonf", isCyclingBonfCutoff_str, "AmpRatio", str_replace(str_extract(DR_gene_lists_method2, pattern = "AR\\d+"), "AR", ""), ".csv")
+DR_backgrounds_method2 = paste0("diff_rhythms_method2_CyclingBHQ", isCyclingBHQCutoff_str, "AmpRatio", str_replace(str_extract(DR_gene_lists_method2, pattern = "AR\\d+"), "AR", ""), ".csv")
 DR_gene_lists = c(DR_gene_lists_method1, DR_gene_lists_method2)
 DR_backgrounds = c(DR_backgrounds_method1, DR_backgrounds_method2)
 
@@ -129,7 +123,7 @@ mapply(function(x, y){
   DR_backgrounds)
 
 #AD severity
-system(paste0("python3 ", path_no_space, "/Python_EnrichR_for_AnalysisPipeline.py -g \"enrichR_files/strong_cogdx_diffs_AR25.csv\" -b \"enrichR_files/AD_cyclers_AR25Bonf05.csv\""))
+system(paste0("python3 ", path_no_space, "/Python_EnrichR_for_AnalysisPipeline.py -g \"enrichR_files/strong_cogdx_diffs_AR25.csv\" -b \"enrichR_files/AD_cyclers_AR25BHQ05.csv\""))
 ```
 
 ### FGSEA
@@ -144,7 +138,7 @@ if (!(dir.exists("downstream_output/fGSEA"))){
 }
 
 #create rnk files
-write_rnks(path_to_cyclops_ordering, isCyclingBonfCutoff_str)
+write_rnks(path_to_cyclops_ordering, isCyclingBHQCutoff_str)
 
 #path of parent folder
 setwd(path)
@@ -238,7 +232,7 @@ lapply(gene_lists, write_pscan_input)
 path_no_space = gsub(" ", "\\ ", path, fixed = TRUE)
 
 setwd("pscan/")
-pscan_files = list.files("./pscan_files/", pattern = ".csv$") 
+pscan_files = list.files("./pscan_files/", pattern = ".csv$")
 
 sapply(pscan_files, function(x){
   system(paste0("python3 ", path_no_space, "/pscan_requests.py --file pscan_files/" ,x))})
@@ -247,12 +241,12 @@ if(exists("deseq_de_filename")){
   setwd("pscan_results")
   pscan_result_files = list.files(pattern = ".csv$")
   print("Searching cycling and DR results for pscan TF")
-  sapply(pscan_result_files, augment_tf_file, deseq_de_filename, isCyclingBonfCutoff_str)
+  sapply(pscan_result_files, augment_tf_file, deseq_de_filename, isCyclingBHQCutoff_str)
   setwd(paste0(path_to_cyclops_ordering, "downstream_output/enrichR_results"))
   directories = list.files()
   enrichR_TF_paths <- lapply(directories, function(dir) list.files(dir, full.names = TRUE, recursive = TRUE, pattern = ".*TRANSFACandJASPARPWMs_BCKGRND.*\\.csv|.*TranscriptionFactorPPIs_BCKGRND.*\\.csv"))
   enrichR_TF_paths = flatten(enrichR_TF_paths) %>% paste0("./", .)  
-  sapply(enrichR_TF_paths, augment_tf_file, deseq_de_filename,     isCyclingBonfCutoff_str)
+  sapply(enrichR_TF_paths, augment_tf_file, deseq_de_filename,     isCyclingBHQCutoff_str)
   
 }
 ```
@@ -265,11 +259,11 @@ Write Files for Kegg Pathway Diagrams
 entrez_dict = readxl::read_excel("scROSMAP_ENSEMBL_ENTREZ_dict.xlsx")
 
 setwd(path_to_cyclops_ordering)
-isCyclingBonfCutoff_str = str_extract(as.character(isCyclingBonfCutoff), "(?<=\\.)\\d+")
+isCyclingBHQCutoff_str = str_extract(as.character(isCyclingBHQCutoff), "(?<=\\.)\\d+")
 
 if (!(dir.exists("downstream_output/KEGG_map_diagrams"))){
   dir.create("downstream_output/KEGG_map_diagrams")
 }
-write_kegg_map_files(paste0("downstream_output/diff_rhythms_CyclingBonf", isCyclingBonfCutoff_str, "AmpRatio25.csv"),"Log_AD_CTL_ampRatio", trans_dict = entrez_dict,BHQ_cutoff = 0.2)
+write_kegg_map_files(paste0("downstream_output/diff_rhythms_CyclingBHQ", isCyclingBHQCutoff_str, "AmpRatio25.csv"),"Log_AD_CTL_ampRatio", trans_dict = entrez_dict,BHQ_cutoff = 0.2)
 
 ```

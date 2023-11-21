@@ -689,7 +689,7 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingSigCutoff 
 
   #Mesor differences
   write.table(differential_mesor, paste(order_path, "downstream_output", "differential_mesor_all_genes.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
-  sig_diff_mesor = filter(differential_mesor, as.numeric(BHQ) < 0.05 ) %>% select( Ensembl, Gene_Symbols)
+  sig_diff_mesor = filter(differential_mesor, as.numeric(BHQ) < 0.05 ) %>% dplyr::select( Ensembl, Gene_Symbols)
   write.table(sig_diff_mesor, paste(order_path, "downstream_output","enrichR_files","diff_mesor_all_genes_BHQ05.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
 
   #Continuous AD differences
@@ -709,12 +709,12 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingSigCutoff 
   write.table(PSEA_DR_AR25BHQ2_acrodiffs, paste0(order_path, "/downstream_output/PSEA_files/PSEA_DR_AR25BHQ2_acrodiffs.txt"), sep = '\t', row.names = F, col.names = F, quote = F)
 
   #write out nice summary of cycling and DR genes
-  summary = data.frame(List = c("Using batch in Regression", "isCyclingBHQCutoff", "Blunting_Percentile" ,paste0("CTL_cyclers_AR25BHQ", BHQ_str), paste0("CTL_cyclers_AR33BHQ", BHQ_str),
-      paste0("AD_cyclers_AR25BHQ", BHQ_str), paste0("AD_cyclers_AR33BHQ", BHQ_str), paste0("AD_CTL_mthd2_cyclers_AR25BHQ", BHQ_str),
+  summary = data.frame(List = c("Using batch in Regression", "isCyclingBHQCutoff", "Blunting_Percentile" ,paste0("CTL_cyclers_AR25BHQ", isCyclingSigCutoff_str), paste0("CTL_cyclers_AR33BHQ", isCyclingSigCutoff_str),
+      paste0("AD_cyclers_AR25BHQ", isCyclingSigCutoff_str), paste0("AD_cyclers_AR33BHQ", isCyclingSigCutoff_str), paste0("AD_CTL_mthd2_cyclers_AR25BHQ", isCyclingSigCutoff_str),
       "DR_cyclers_AR1BHQ2", "DR_cyclers_AR25BHQ2", "DR_cyclers_AR33BHQ2", "DR_cyclers_mthd2_AR1_DRBHQ2", "DR_cyclers_mthd2_AR25_DRBHQ2",
       "DR_lostAmpAD_AR1BHQ2", "DR_lostAmpAD_AR25BHQ2", "DR_lostAmpAD_AR33BHQ2", "DR_mthd2_lostAmpAD_AR1BHQ2", "DR_mthd2_lostAmpAD_AR25BHQ2",
       "DR_gainAmpAD_AR1BHQ2", "DR_gainAmpAD_AR25BHQ2", "DR_gainAmpAD_AR33BHQ2", "DR_mthd2_gainAmpAD_AR1BHQ2", "DR_mthd2_gainAmpAD_AR25BHQ2"),
-      Num_genes = c(useBatch, BHQ, percentile, dim(CTL_cyclers_AR25BHQCutoff)[1], dim(CTL_cyclers_AR33BHQCutoff)[1],
+      Num_genes = c(useBatch, isCyclingSigCutoff, percentile, dim(CTL_cyclers_AR25BHQCutoff)[1], dim(CTL_cyclers_AR33BHQCutoff)[1],
       dim(AD_cyclers_AR25BHQCutoff)[1],dim(AD_cyclers_AR33BHQCutoff)[1],
       dim(mthd2_cyclers_AR25BHQCutoff)[1],
       dim(DR_cyclers_AR1_DRBHQ2)[1],dim(DR_cyclers_AR25_DRBHQ2)[1], dim(DR_cyclers_AR33_DRBHQ2)[1], dim(DR_cyclers_mthd2_AR1_DRBHQ2)[1], dim(DR_cyclers_mthd2_AR25_DRBHQ2)[1],

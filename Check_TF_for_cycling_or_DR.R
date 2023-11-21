@@ -4,7 +4,7 @@
 # and checking if they are found in DE, DE, DM, cycling files. 
 library(ggrepel)
 library(tidyverse)
-augment_tf_file = function(TF_filename, deseq_filename, isCyclingBonfCutoff_str){
+augment_tf_file = function(TF_filename, deseq_filename, isCyclingBHQCutoff_str){
   current_dir = getwd()
   TF_file = read.csv(TF_filename)
   if (colnames(TF_file)[1]== "Rank"){ #if file comes from enrichR, make it look like pscan
@@ -17,8 +17,8 @@ augment_tf_file = function(TF_filename, deseq_filename, isCyclingBonfCutoff_str)
   }
   DEseq_toptags = read.csv(deseq_filename)
 
-  DR_AR1_mthd2 = read.csv(paste0(path_to_cyclops_ordering, "/downstream_output/diff_rhythms_method2_CyclingBonf",isCyclingBonfCutoff_str,"AmpRatio1.csv"))
-  DR_AR1 = read.csv(paste0(path_to_cyclops_ordering, "/downstream_output/diff_rhythms_CyclingBonf",isCyclingBonfCutoff_str,"AmpRatio1.csv"))
+  DR_AR1_mthd2 = read.csv(paste0(path_to_cyclops_ordering, "/downstream_output/diff_rhythms_method2_CyclingBHQ",isCyclingBHQCutoff_str,"AmpRatio1.csv"))
+  DR_AR1 = read.csv(paste0(path_to_cyclops_ordering, "/downstream_output/diff_rhythms_CyclingBHQ",isCyclingBHQCutoff_str,"AmpRatio1.csv"))
   cycling_CTL = read.csv(paste0(path_to_cyclops_ordering, "/downstream_output/cosinor_results_CTL.csv"))
   cycling_AD = read.csv(paste0(path_to_cyclops_ordering, "/downstream_output/cosinor_results_AD.csv"))
   mesor_file = list.files(path = paste0(path_to_cyclops_ordering, "/downstream_output") ,pattern = "\\.*mesor.*.csv$")
