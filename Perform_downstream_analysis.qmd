@@ -18,6 +18,7 @@ source("./Files_for_Pscan.R")
 source("./Make_KEGG_map_files.R")
 source("./Check_TF_for_cycling_or_DR.R")
 source("./fgsea_plot_for_downstream.R")
+source("./plot_clock_face_plots.R")
 ```
 
 This notebook makes use of python via anaconda. Please make sure you install anaconda to proceed:
@@ -38,17 +39,18 @@ Select the CYCLOPS ordering path and path to data file and path to DEseq2 differ
 
 ```{r}
 #path to cyclops ordering
-path_to_cyclops_ordering = "~/Desktop/test/"
+path_to_cyclops_ordering = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/TMMs_w_batch/Exc3and5TMM_OrderedBy_Exc3and5FiltByEdgeRDefaultIpBulkChenZhangCondAndBatchCovs3EGDefaultNoTransferFit/"
 
 #path to normalized counts
-path_to_tmm_file = "~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/EdgeR_filt_normed/ExcNeurons_FiltByExprDefault_TMM_combatSeqAdjusted.csv"
+path_to_tmm_file = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/EdgeR_filt_normed/ExcSubtypes3and5_FiltByExprDefault_TMM_CombatAdjusted.csv"
 
-#optional path to file containing differential expression results
-# deseq_de_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/ExcitatoryNeurons_CellsFiltered10Percent_cogdx_DE_DEseq2.csv"
+# optional path to file containing differential expression results
+deseq_de_filename = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/Astrocytes/Astrocytes_filtByExpr_combatSeq_edgeR_DE_ExactTest.csv"
 
 #Bonferroni corrected p cutoff to be considered cycling in analysis:
-isCyclingBonfCutoff = 0.05
-percentile = 0.025
+isCyclingBonfCutoff = 0.1
+percentile = 0.05
+useBatch = F
 ```
 
 ### Cosinor Regression and Differential Rhythmicity
@@ -57,17 +59,37 @@ Run cosinor regression and differential rhythmicity analysis with custom script 
 
 ```{r}
 # read in translation dict between gene symbols and other alias
-entrez_dict = readxl::read_excel("scROSMAP_ENSEMBL_ENTREZ_dict.xlsx")
 Ensembl_dict = readxl::read_xlsx("scROSMAP_ENSEMBL_dict.xlsx")
 
 #run custom cycling and differential rhythmicity analysis
 print("***Running cosinor and differential rhythms analysis***")
-run_cycling_and_dr_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = isCyclingBonfCutoff, percentile = percentile, useBatch = F)
+run_cycling_and_dr_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = isCyclingBonfCutoff, percentile = percentile, useBatch = useBatch)
 
 # #Run the cycling and DR analysis with CompareRhythms package
 # print("***Running CompareRhythms Package***")
 # run_compare_rhythms(path_to_cyclops_ordering, path_to_tmm_file, isCyclingBonfCutoff = isCyclingBonfCutoff)
 
+```
+
+### Plot Clock Face Plots
+
+With custom regression, I have to remake clock face plots
+
+```{r}
+setwd(path_to_cyclops_ordering)
+if (!(dir.exists("downstream_output/clock_face_plots"))){
+  dir.create("downstream_output/clock_face_plots")
+}
+
+abs_path = str_replace(path_to_cyclops_ordering, "~", "")
+
+#for cycling_in_CTL.csv
+plot_clock_face(paste0(abs_path, "downstream_output/clock_face_plots/CTL_cyclers.png"),"downstream_output/cosinor_results_CTL.csv", Bonf_cutoff = isCyclingBonfCutoff, amp_ratio_cutoff = 0 )
+
+setwd(path_to_cyclops_ordering)
+
+#for cycling_in_AD.csv
+plot_clock_face(paste0(abs_path, "downstream_output/clock_face_plots/AD_cyclers.png"),"downstream_output/cosinor_results_AD.csv", Bonf_cutoff = isCyclingBonfCutoff, amp_ratio_cutoff = 0)
 ```
 
 ### EnrichR
@@ -200,6 +222,8 @@ apply(arg_df, 1, function(a){
 Now I search for transcription factors associated with my various gene lists, i.e, TF's associated with genes that lose amplitude in AD, etc.
 
 ```{r}
+path = getwd()
+
 #create pscan dir if does not exist:
 if(!(dir.exists(paste0(path_to_cyclops_ordering, "downstream_output/pscan")))){
   dir.create(paste0(path_to_cyclops_ordering, "downstream_output/pscan") )
@@ -230,7 +254,7 @@ if(exists("deseq_de_filename")){
   enrichR_TF_paths = flatten(enrichR_TF_paths) %>% paste0("./", .)  
   sapply(enrichR_TF_paths, augment_tf_file, deseq_de_filename,     isCyclingBonfCutoff_str)
   
-  }
+}
 ```
 
 ### Write KEGG Files
@@ -238,9 +262,14 @@ if(exists("deseq_de_filename")){
 Write Files for Kegg Pathway Diagrams
 
 ```{r}
+entrez_dict = readxl::read_excel("scROSMAP_ENSEMBL_ENTREZ_dict.xlsx")
+
+setwd(path_to_cyclops_ordering)
+isCyclingBonfCutoff_str = str_extract(as.character(isCyclingBonfCutoff), "(?<=\\.)\\d+")
+
 if (!(dir.exists("downstream_output/KEGG_map_diagrams"))){
   dir.create("downstream_output/KEGG_map_diagrams")
 }
-write_kegg_map_files("downstream_output/diff_rhythms_AmpRatio25.csv","Log_AD_CTL_ampRatio", trans_dict = entrez_dict,BHQ_cutoff = 0.2)
+write_kegg_map_files(paste0("downstream_output/diff_rhythms_CyclingBonf", isCyclingBonfCutoff_str, "AmpRatio25.csv"),"Log_AD_CTL_ampRatio", trans_dict = entrez_dict,BHQ_cutoff = 0.2)
 
 ```

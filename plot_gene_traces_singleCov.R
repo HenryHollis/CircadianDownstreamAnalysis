@@ -125,8 +125,8 @@ draw_gene_tracings = function(cyc_pred, tmm, seedlist, savePlots = F, split_cond
 
 }
 plot_exc_neuron_genes = function(seedlist, split_cond_plots = T, percentile = 0.025,
-          tmm_path = "DEseq2_normed/ExcNeurons_cogdxControls_condCovs_filtered1counts10prcntCells_deseq.csv",
-          fits_path = "../../../training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/Deseq_normed_counts/Exc_Neurons_CellFiltered10Percent_ErikChenZhang_condCovs_5EG_DeseqNormed_NoTransferFit/Fits/"){
+          tmm_path = "EdgeR_filt_normed/ExcNeurons_FiltByExprDefault_TMM_combatSeqAdjusted.csv",
+          fits_path = "../../../training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/TMMs_w_batch/Exc3and5_FiltByEdgeRDefault_ipBulkChenZhang_condAndBatchCovs_3EGdefault_noTransferFit/Fits/"){
   setwd("~/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/")
   rosmap_meta = read.csv("../../../../../scROSMAP/Meta_data/cleaned_rosmap_meta_cogdxConds.csv")
   print(paste("Plotting from", tmm_path))

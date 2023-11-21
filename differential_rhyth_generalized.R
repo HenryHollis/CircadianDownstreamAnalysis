@@ -524,7 +524,7 @@ mesor_differences = function(cyc_pred, tmm, DR_genes, pb = NULL, useBatch = F, p
 
 ##### main function #####
 
-run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff = 0.05, useBatch = F, percentile = 0.025){
+run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingSigCutoff = 0.05, useBatch = F, percentile = 0.025){
   tmm = read_csv(tmm_path, show_col_types = FALSE)      #read expression data, unordered
   colnames(tmm)[1] = "gene_names" #set first column name bc sometimes they are different
 
@@ -539,9 +539,9 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   Ensembl = Ensembl_dict$ENSEMBL[match(cycling_in_CTL$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
   cycling_in_CTL = cbind(Ensembl, cycling_in_CTL)
   #record strong cyclers in CTL, for several different amplitude cutoffs
-  strong_cyclers_CTL_AR25 = dplyr::filter(cycling_in_CTL, as.numeric(amp_ratio) >=0.25 & as.numeric(Bonf) < isCyclingBonfCutoff) %>% arrange(as.numeric(Bonf))
-  strong_cyclers_CTL_AR33 = dplyr::filter(cycling_in_CTL, as.numeric(amp_ratio) >=0.33 & as.numeric(Bonf) < isCyclingBonfCutoff) %>% arrange(as.numeric(Bonf))
-  strong_cyclers_CTL_AR1 = dplyr::filter(cycling_in_CTL, as.numeric(amp_ratio) >=0.1 & as.numeric(Bonf) < isCyclingBonfCutoff) %>% arrange(as.numeric(Bonf))
+  strong_cyclers_CTL_AR25 = dplyr::filter(cycling_in_CTL, as.numeric(amp_ratio) >=0.25 & as.numeric(BHQ) < isCyclingSigCutoff) %>% arrange(as.numeric(BHQ))
+  strong_cyclers_CTL_AR33 = dplyr::filter(cycling_in_CTL, as.numeric(amp_ratio) >=0.33 & as.numeric(BHQ) < isCyclingSigCutoff) %>% arrange(as.numeric(BHQ))
+  strong_cyclers_CTL_AR1 = dplyr::filter(cycling_in_CTL, as.numeric(amp_ratio) >=0.1 & as.numeric(BHQ) < isCyclingSigCutoff) %>% arrange(as.numeric(BHQ))
 
   #perform is_cycling (method 1) nested regression on AD data
   pb <- progress_bar$new(total = dim(tmm)[1])
@@ -550,9 +550,9 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   Ensembl = Ensembl_dict$ENSEMBL[match(cycling_in_AD$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
   cycling_in_AD = cbind(Ensembl, cycling_in_AD)
   #record strong cyclers in AD, for several different amplitude cutoffs
-  strong_cyclers_AD_AR25 = dplyr::filter(cycling_in_AD, as.numeric(amp_ratio) >=0.25 & as.numeric(Bonf) < isCyclingBonfCutoff) %>% arrange(as.numeric(Bonf))
-  strong_cyclers_AD_AR33 = dplyr::filter(cycling_in_AD, as.numeric(amp_ratio) >=0.33 & as.numeric(Bonf) < isCyclingBonfCutoff) %>% arrange(as.numeric(Bonf))
-  strong_cyclers_AD_AR1 = dplyr::filter(cycling_in_AD, as.numeric(amp_ratio) >=0.1 & as.numeric(Bonf) < isCyclingBonfCutoff) %>% arrange(as.numeric(Bonf))
+  strong_cyclers_AD_AR25 = dplyr::filter(cycling_in_AD, as.numeric(amp_ratio) >=0.25 & as.numeric(BHQ) < isCyclingSigCutoff) %>% arrange(as.numeric(BHQ))
+  strong_cyclers_AD_AR33 = dplyr::filter(cycling_in_AD, as.numeric(amp_ratio) >=0.33 & as.numeric(BHQ) < isCyclingSigCutoff) %>% arrange(as.numeric(BHQ))
+  strong_cyclers_AD_AR1 = dplyr::filter(cycling_in_AD, as.numeric(amp_ratio) >=0.1 & as.numeric(BHQ) < isCyclingSigCutoff) %>% arrange(as.numeric(BHQ))
 
   #perform is_cycling (method 2) nested regression on all data ( all data tested together, same to compareRhythms)
   pb <- progress_bar$new(total = dim(tmm)[1])
@@ -561,8 +561,8 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   Ensembl = Ensembl_dict$ENSEMBL[match(cycling_in_either_cond$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
   cycling_in_either_cond = cbind(Ensembl, cycling_in_either_cond)
   #record strong cyclers in either condition, for several different amplitude cutoffs
-  strong_cyclers_method2_AR25 = dplyr::filter(cycling_in_either_cond, ( (as.numeric(amp_ratio_CTL) >=0.25) | (as.numeric(amp_ratio_AD) >=0.25)) & as.numeric(Bonf) < isCyclingBonfCutoff) %>% arrange(as.numeric(Bonf))
-  strong_cyclers_method2_AR1 = dplyr::filter(cycling_in_either_cond, ( (as.numeric(amp_ratio_CTL) >=0.1) | (as.numeric(amp_ratio_AD) >=0.1)) & as.numeric(Bonf) < isCyclingBonfCutoff) %>% arrange(as.numeric(Bonf))
+  strong_cyclers_method2_AR25 = dplyr::filter(cycling_in_either_cond, ( (as.numeric(amp_ratio_CTL) >=0.25) | (as.numeric(amp_ratio_AD) >=0.25)) & as.numeric(BHQ) < isCyclingSigCutoff) %>% arrange(as.numeric(BHQ))
+  strong_cyclers_method2_AR1 = dplyr::filter(cycling_in_either_cond, ( (as.numeric(amp_ratio_CTL) >=0.1) | (as.numeric(amp_ratio_AD) >=0.1)) & as.numeric(BHQ) < isCyclingSigCutoff) %>% arrange(as.numeric(BHQ))
 
   # We only test for diff rhythmicity if a gene cycles in AD OR CTL. Here I create those unions
   seedlist_AR25 = union(strong_cyclers_AD_AR25$Gene_Symbols, strong_cyclers_CTL_AR25$Gene_Symbols)
@@ -602,17 +602,17 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   diff_rhythms_mthd2_AR25 = DR_results[[4]]
   diff_rhythms_mthd2_AR1 = DR_results[[5]]
 
-  #Create list of strong cyclers (AR 0.25 or 0.33 and Bonf < Bonfcutoff) in CTL subjects
-  CTL_cyclers_AR25BonfCutoff = dplyr::select(strong_cyclers_CTL_AR25, Ensembl , Gene_Symbols )
-  CTL_cyclers_AR33BonfCutoff = dplyr::select(strong_cyclers_CTL_AR33, Ensembl , Gene_Symbols )
+  #Create list of strong cyclers (AR 0.25 or 0.33 and BHQ < BHQcutoff) in CTL subjects
+  CTL_cyclers_AR25BHQCutoff = dplyr::select(strong_cyclers_CTL_AR25, Ensembl , Gene_Symbols )
+  CTL_cyclers_AR33BHQCutoff = dplyr::select(strong_cyclers_CTL_AR33, Ensembl , Gene_Symbols )
 
-  #Create list of strong cyclers (AR 0.25 or 0.33 and Bonf < Bonfcutoff) in AD subjects
-  AD_cyclers_AR25BonfCutoff = dplyr::select(strong_cyclers_AD_AR25, Ensembl , Gene_Symbols )
-  AD_cyclers_AR33BonfCutoff = dplyr::select(strong_cyclers_AD_AR33, Ensembl , Gene_Symbols )
+  #Create list of strong cyclers (AR 0.25 or 0.33 and BHQ < BHQcutoff) in AD subjects
+  AD_cyclers_AR25BHQCutoff = dplyr::select(strong_cyclers_AD_AR25, Ensembl , Gene_Symbols )
+  AD_cyclers_AR33BHQCutoff = dplyr::select(strong_cyclers_AD_AR33, Ensembl , Gene_Symbols )
 
-  #Create list of strong cyclers (AR 0.25 or 0.33 and Bonf < Bonfcutoff) in Either (method 2)
-  mthd2_cyclers_AR25BonfCutoff = dplyr::select(strong_cyclers_method2_AR25, Ensembl, Gene_Symbols)
-  mthd2_cyclers_AR1BonfCutoff = dplyr::select(strong_cyclers_method2_AR1, Ensembl, Gene_Symbols)
+  #Create list of strong cyclers (AR 0.25 or 0.33 and BHQ < BHQcutoff) in Either (method 2)
+  mthd2_cyclers_AR25BHQCutoff = dplyr::select(strong_cyclers_method2_AR25, Ensembl, Gene_Symbols)
+  mthd2_cyclers_AR1BHQCutoff = dplyr::select(strong_cyclers_method2_AR1, Ensembl, Gene_Symbols)
 
   # All genes expressed in CTL and AD:
   EnrichR_background = dplyr::select(cycling_in_CTL, Ensembl, Gene_Symbols)
@@ -646,51 +646,51 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
     dir.create(paste(order_path, "downstream_output", "PSEA_files", sep = '/'))
 
   }
-  #Create string for isCyclingBonfCutoff.  E.g. 0.05 -> "05"
-  isCyclingBonfCutoff_str = str_extract(as.character(isCyclingBonfCutoff), "(?<=\\.)\\d+")
+  #Create string for isCyclingSigCutoff.  E.g. 0.05 -> "05"
+  isCyclingSigCutoff_str = str_extract(as.character(isCyclingSigCutoff), "(?<=\\.)\\d+")
   blunting_percentile_str = str_extract(as.character(percentile), "(?<=\\.)\\d+")
 
   #write out all results of cycling and DR analysis
-  write.table(diff_rhythms25, paste0(order_path, "/downstream_output/diff_rhythms_CyclingBonf",isCyclingBonfCutoff_str,"AmpRatio25.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(diff_rhythms33, paste0(order_path, "/downstream_output/diff_rhythms_CyclingBonf",isCyclingBonfCutoff_str,"AmpRatio33.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(diff_rhythms1, paste0(order_path, "/downstream_output/diff_rhythms_CyclingBonf",isCyclingBonfCutoff_str,"AmpRatio1.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(diff_rhythms_mthd2_AR25, paste0(order_path, "/downstream_output/diff_rhythms_method2_CyclingBonf",isCyclingBonfCutoff_str,"AmpRatio25.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(diff_rhythms_mthd2_AR1, paste0(order_path, "/downstream_output/diff_rhythms_method2_CyclingBonf",isCyclingBonfCutoff_str,"AmpRatio1.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(diff_rhythms25, paste0(order_path, "/downstream_output/diff_rhythms_CyclingBHQ",isCyclingSigCutoff_str,"AmpRatio25.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(diff_rhythms33, paste0(order_path, "/downstream_output/diff_rhythms_CyclingBHQ",isCyclingSigCutoff_str,"AmpRatio33.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(diff_rhythms1, paste0(order_path, "/downstream_output/diff_rhythms_CyclingBHQ",isCyclingSigCutoff_str,"AmpRatio1.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(diff_rhythms_mthd2_AR25, paste0(order_path, "/downstream_output/diff_rhythms_method2_CyclingBHQ",isCyclingSigCutoff_str,"AmpRatio25.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(diff_rhythms_mthd2_AR1, paste0(order_path, "/downstream_output/diff_rhythms_method2_CyclingBHQ",isCyclingSigCutoff_str,"AmpRatio1.csv"), sep = ',', row.names = F, col.names = T)
   write.table(cycling_in_CTL, paste(order_path, "downstream_output","cosinor_results_CTL.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
   write.table(cycling_in_AD, paste(order_path, "downstream_output","cosinor_results_AD.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
   write.table(cycling_in_either_cond, paste(order_path, "downstream_output","cosinor_results_method2_cyclingInEither.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
   #gene lists for enrichR
-  write.table(CTL_cyclers_AR25BonfCutoff, paste0(order_path, "/downstream_output/enrichR_files/CTL_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
-  write.table(CTL_cyclers_AR33BonfCutoff, paste0(order_path, "/downstream_output/enrichR_files/CTL_cyclers_AR33Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
-  write.table(AD_cyclers_AR25BonfCutoff, paste0(order_path, "/downstream_output/enrichR_files/AD_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
-  write.table(AD_cyclers_AR33BonfCutoff, paste0(order_path, "/downstream_output/enrichR_files/AD_cyclers_AR33Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
-  write.table(mthd2_cyclers_AR25BonfCutoff, paste0(order_path, "/downstream_output/enrichR_files/AD_CTL_mthd2_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
+  write.table(CTL_cyclers_AR25BHQCutoff, paste0(order_path, "/downstream_output/enrichR_files/CTL_cyclers_AR25BHQ", isCyclingSigCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
+  write.table(CTL_cyclers_AR33BHQCutoff, paste0(order_path, "/downstream_output/enrichR_files/CTL_cyclers_AR33BHQ", isCyclingSigCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
+  write.table(AD_cyclers_AR25BHQCutoff, paste0(order_path, "/downstream_output/enrichR_files/AD_cyclers_AR25BHQ", isCyclingSigCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
+  write.table(AD_cyclers_AR33BHQCutoff, paste0(order_path, "/downstream_output/enrichR_files/AD_cyclers_AR33BHQ", isCyclingSigCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
+  write.table(mthd2_cyclers_AR25BHQCutoff, paste0(order_path, "/downstream_output/enrichR_files/AD_CTL_mthd2_cyclers_AR25BHQ", isCyclingSigCutoff_str, ".csv"), sep = ',', row.names = F, col.names = T)
 
   #background genes for enrichR
   write.table(EnrichR_background, paste(order_path, "downstream_output", "enrichR_files","EnrichR_background.csv", sep = '/'), sep = ',', row.names = F, col.names = T)
   #DR genes for enrichR
-  write.table(DR_cyclers_AR33_DRBHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_cyclers_CyclingBonf",isCyclingBonfCutoff_str,"AR33_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_cyclers_AR25_DRBHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_cyclers_CyclingBonf",isCyclingBonfCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_cyclers_AR1_DRBHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_cyclers_CyclingBonf",isCyclingBonfCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_cyclers_mthd2_AR25_DRBHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_cyclers_mthd2_CyclingBonf",isCyclingBonfCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_cyclers_mthd2_AR1_DRBHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_cyclers_mthd2_CyclingBonf",isCyclingBonfCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_cyclers_AR33_DRBHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_cyclers_CyclingBHQ",isCyclingSigCutoff_str,"AR33_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_cyclers_AR25_DRBHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_cyclers_CyclingBHQ",isCyclingSigCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_cyclers_AR1_DRBHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_cyclers_CyclingBHQ",isCyclingSigCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_cyclers_mthd2_AR25_DRBHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_cyclers_mthd2_CyclingBHQ",isCyclingSigCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_cyclers_mthd2_AR1_DRBHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_cyclers_mthd2_CyclingBHQ",isCyclingSigCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
 
-  write.table(DR_lostAmpAD_AR33BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_lostAmpAD_CyclingBonf",isCyclingBonfCutoff_str,"AR33_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_lostAmpAD_AR25BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_lostAmpAD_CyclingBonf",isCyclingBonfCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_lostAmpAD_AR1BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_lostAmpAD_CyclingBonf",isCyclingBonfCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_mthd2_lostAmpAD_AR25BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_mthd2_lostAmpAD_CyclingBonf",isCyclingBonfCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_mthd2_lostAmpAD_AR1BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_mthd2_lostAmpAD_CyclingBonf",isCyclingBonfCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_lostAmpAD_AR33BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_lostAmpAD_CyclingBHQ",isCyclingSigCutoff_str,"AR33_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_lostAmpAD_AR25BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_lostAmpAD_CyclingBHQ",isCyclingSigCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_lostAmpAD_AR1BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_lostAmpAD_CyclingBHQ",isCyclingSigCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_mthd2_lostAmpAD_AR25BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_mthd2_lostAmpAD_CyclingBHQ",isCyclingSigCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_mthd2_lostAmpAD_AR1BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_mthd2_lostAmpAD_CyclingBHQ",isCyclingSigCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
 
-  write.table(DR_gainAmpAD_AR33BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_gainAmpAD_CyclingBonf",isCyclingBonfCutoff_str,"AR33_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_gainAmpAD_AR25BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_gainAmpAD_CyclingBonf",isCyclingBonfCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_gainAmpAD_AR1BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_gainAmpAD_CyclingBonf",isCyclingBonfCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_mthd2_gainAmpAD_AR25BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_mthd2_gainAmpAD_CyclingBonf",isCyclingBonfCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
-  write.table(DR_mthd2_gainAmpAD_AR1BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_mthd2_gainAmpAD_CyclingBonf",isCyclingBonfCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_gainAmpAD_AR33BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_gainAmpAD_CyclingBHQ",isCyclingSigCutoff_str,"AR33_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_gainAmpAD_AR25BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_gainAmpAD_CyclingBHQ",isCyclingSigCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_gainAmpAD_AR1BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_gainAmpAD_CyclingBHQ",isCyclingSigCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_mthd2_gainAmpAD_AR25BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_mthd2_gainAmpAD_CyclingBHQ",isCyclingSigCutoff_str,"AR25_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
+  write.table(DR_mthd2_gainAmpAD_AR1BHQ2, paste0(order_path, "/downstream_output/enrichR_files/DR_mthd2_gainAmpAD_CyclingBHQ",isCyclingSigCutoff_str,"AR1_DRBHQ2.csv"), sep = ',', row.names = F, col.names = T)
 
   #Mesor differences
   write.table(differential_mesor, paste(order_path, "downstream_output", "differential_mesor_all_genes.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
-  sig_diff_mesor = filter(differential_mesor, as.numeric(Bonf) < 0.05 ) %>% select( Ensembl, Gene_Symbols)
-  write.table(sig_diff_mesor, paste(order_path, "downstream_output","enrichR_files","diff_mesor_all_genes_Bonf05.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
+  sig_diff_mesor = filter(differential_mesor, as.numeric(BHQ) < 0.05 ) %>% select( Ensembl, Gene_Symbols)
+  write.table(sig_diff_mesor, paste(order_path, "downstream_output","enrichR_files","diff_mesor_all_genes_BHQ05.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
 
   #Continuous AD differences
   write.table(diff_rhythms_AD_severity, paste(order_path, "downstream_output", "diff_rhythms_AD_severity_AR25.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
@@ -700,23 +700,23 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingBonfCutoff
   write.table(strong_cogdx_diffs, paste(order_path, "downstream_output", "enrichR_files", "strong_cogdx_diffs_AR25.csv", sep = "/"), sep = ',', row.names = F, col.names = T)
 
   #create lists of genes for PSEA
-  PSEA_CTL_cyclers_AR25BonfCutoff = strong_cyclers_CTL_AR25 %>% dplyr::select(Gene_Symbols, acrophase ) %>% mutate(acrophase = as.numeric(acrophase) * 12 / pi)
-  write.table(PSEA_CTL_cyclers_AR25BonfCutoff, paste0(order_path, "/downstream_output/PSEA_files/PSEA_CTL_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".txt"), sep = '\t', row.names = F, col.names = F, quote = F)
-  PSEA_AD_cyclers_AR25BonfCutoff = strong_cyclers_AD_AR25 %>% dplyr::select(Gene_Symbols, acrophase ) %>% mutate(acrophase = as.numeric(acrophase) * 12 / pi)
-  write.table(PSEA_AD_cyclers_AR25BonfCutoff, paste0(order_path, "/downstream_output/PSEA_files/PSEA_AD_cyclers_AR25Bonf", isCyclingBonfCutoff_str, ".txt"), sep = '\t', row.names = F, col.names = F, quote = F)
+  PSEA_CTL_cyclers_AR25BHQCutoff = strong_cyclers_CTL_AR25 %>% dplyr::select(Gene_Symbols, acrophase ) %>% mutate(acrophase = as.numeric(acrophase) * 12 / pi)
+  write.table(PSEA_CTL_cyclers_AR25BHQCutoff, paste0(order_path, "/downstream_output/PSEA_files/PSEA_CTL_cyclers_AR25BHQ", isCyclingSigCutoff_str, ".txt"), sep = '\t', row.names = F, col.names = F, quote = F)
+  PSEA_AD_cyclers_AR25BHQCutoff = strong_cyclers_AD_AR25 %>% dplyr::select(Gene_Symbols, acrophase ) %>% mutate(acrophase = as.numeric(acrophase) * 12 / pi)
+  write.table(PSEA_AD_cyclers_AR25BHQCutoff, paste0(order_path, "/downstream_output/PSEA_files/PSEA_AD_cyclers_AR25BHQ", isCyclingSigCutoff_str, ".txt"), sep = '\t', row.names = F, col.names = F, quote = F)
   PSEA_DR_AR25BHQ2_acrodiffs = DR_cyclers_AR25_DRBHQ2 %>% mutate(acro_diff = (as.numeric(acrophase_AD) - as.numeric(acrophase_CTL))*12/pi ) %>%
     dplyr::select(Gene_Symbols, acro_diff)
   write.table(PSEA_DR_AR25BHQ2_acrodiffs, paste0(order_path, "/downstream_output/PSEA_files/PSEA_DR_AR25BHQ2_acrodiffs.txt"), sep = '\t', row.names = F, col.names = F, quote = F)
 
   #write out nice summary of cycling and DR genes
-  summary = data.frame(List = c("Using batch in Regression", "isCyclingBonfCutoff", "Blunting_Percentile" ,paste0("CTL_cyclers_AR25Bonf", isCyclingBonfCutoff_str), paste0("CTL_cyclers_AR33Bonf", isCyclingBonfCutoff_str),
-      paste0("AD_cyclers_AR25Bonf", isCyclingBonfCutoff_str), paste0("AD_cyclers_AR33Bonf", isCyclingBonfCutoff_str), paste0("AD_CTL_mthd2_cyclers_AR25Bonf", isCyclingBonfCutoff_str),
+  summary = data.frame(List = c("Using batch in Regression", "isCyclingBHQCutoff", "Blunting_Percentile" ,paste0("CTL_cyclers_AR25BHQ", BHQ_str), paste0("CTL_cyclers_AR33BHQ", BHQ_str),
+      paste0("AD_cyclers_AR25BHQ", BHQ_str), paste0("AD_cyclers_AR33BHQ", BHQ_str), paste0("AD_CTL_mthd2_cyclers_AR25BHQ", BHQ_str),
       "DR_cyclers_AR1BHQ2", "DR_cyclers_AR25BHQ2", "DR_cyclers_AR33BHQ2", "DR_cyclers_mthd2_AR1_DRBHQ2", "DR_cyclers_mthd2_AR25_DRBHQ2",
       "DR_lostAmpAD_AR1BHQ2", "DR_lostAmpAD_AR25BHQ2", "DR_lostAmpAD_AR33BHQ2", "DR_mthd2_lostAmpAD_AR1BHQ2", "DR_mthd2_lostAmpAD_AR25BHQ2",
       "DR_gainAmpAD_AR1BHQ2", "DR_gainAmpAD_AR25BHQ2", "DR_gainAmpAD_AR33BHQ2", "DR_mthd2_gainAmpAD_AR1BHQ2", "DR_mthd2_gainAmpAD_AR25BHQ2"),
-      Num_genes = c(useBatch, isCyclingBonfCutoff, percentile, dim(CTL_cyclers_AR25BonfCutoff)[1], dim(CTL_cyclers_AR33BonfCutoff)[1],
-      dim(AD_cyclers_AR25BonfCutoff)[1],dim(AD_cyclers_AR33BonfCutoff)[1],
-      dim(mthd2_cyclers_AR25BonfCutoff)[1],
+      Num_genes = c(useBatch, BHQ, percentile, dim(CTL_cyclers_AR25BHQCutoff)[1], dim(CTL_cyclers_AR33BHQCutoff)[1],
+      dim(AD_cyclers_AR25BHQCutoff)[1],dim(AD_cyclers_AR33BHQCutoff)[1],
+      dim(mthd2_cyclers_AR25BHQCutoff)[1],
       dim(DR_cyclers_AR1_DRBHQ2)[1],dim(DR_cyclers_AR25_DRBHQ2)[1], dim(DR_cyclers_AR33_DRBHQ2)[1], dim(DR_cyclers_mthd2_AR1_DRBHQ2)[1], dim(DR_cyclers_mthd2_AR25_DRBHQ2)[1],
       dim(DR_lostAmpAD_AR1BHQ2)[1], dim(DR_lostAmpAD_AR25BHQ2)[1],dim(DR_lostAmpAD_AR33BHQ2)[1], dim(DR_mthd2_lostAmpAD_AR1BHQ2)[1], dim(DR_mthd2_lostAmpAD_AR25BHQ2)[1],
       dim(DR_gainAmpAD_AR1BHQ2)[1], dim(DR_gainAmpAD_AR25BHQ2)[1], dim(DR_gainAmpAD_AR33BHQ2)[1], dim(DR_mthd2_gainAmpAD_AR1BHQ2)[1], dim(DR_mthd2_gainAmpAD_AR25BHQ2)[1])
