@@ -19,6 +19,7 @@ source("./Make_KEGG_map_files.R")
 source("./Check_TF_for_cycling_or_DR.R")
 source("./fgsea_plot_for_downstream.R")
 source("./plot_clock_face_plots.R")
+source("./plot_gene_traces_generalized.R")
 ```
 
 This notebook makes use of python via anaconda. Please make sure you install anaconda to proceed:
@@ -39,18 +40,18 @@ Select the CYCLOPS ordering path and path to data file and path to DEseq2 differ
 
 ```{r}
 #path to cyclops ordering
-path_to_cyclops_ordering = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/Astrocytes/TMMs_w_batch/Astro_FiltByEdgeRDefault_OrderedByExcNeuronsErikChenZhangCondBatchCovs3egNoTransferFit/"
+path_to_cyclops_ordering = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/TMMs_w_batch/Exc3and5_FiltByEdgeRDefault_ipBulkChenZhang_condAndBatchCovs_3EGdefault_noTransferFit/"
 
 #path to normalized counts
-path_to_tmm_file = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/EdgeR_filt_normed/Astrocytes_FiltByExprDefault_TMM_combatSeqAdjusted.csv"
+path_to_tmm_file = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/EdgeR_filt_normed/ExcSubtypes3and5_FiltByExprDefault_TMM.csv"
 
 # optional path to file containing differential expression results
-deseq_de_filename = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/Astrocytes/Astrocytes_filtByExpr_combatSeq_edgeR_DE_ExactTest.csv"
+deseq_de_filename = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/Microglia/Microglia_filtByExpr_combatSeq_edgeR_DE_ExactTest.csv"
 
 #BHQ corrected p cutoff to be considered cycling in analysis:
 isCyclingBHQCutoff = 0.1
 percentile = 0.05
-useBatch = F
+useBatch = T
 ```
 
 ### Cosinor Regression and Differential Rhythmicity
@@ -66,25 +67,32 @@ print("***Running cosinor and differential rhythms analysis***")
 run_cycling_and_dr_analysis(path_to_cyclops_ordering, path_to_tmm_file, isCyclingSigCutoff = isCyclingBHQCutoff, percentile = percentile, useBatch = useBatch)
 ```
 
-### Plot Clock Face Plots
+### Plotting
 
-With custom regression, I have to remake clock face plots
+With custom regression, I have to remake clock face plots, genes plots, etc.
 
 ```{r}
 setwd(path_to_cyclops_ordering)
-if (!(dir.exists("downstream_output/clock_face_plots"))){
-  dir.create("downstream_output/clock_face_plots")
+if (!(dir.exists("downstream_output/plots"))){
+  dir.create("downstream_output/plots")
 }
 
 abs_path = str_replace(path_to_cyclops_ordering, "~", "")
 
 #for cycling_in_CTL.csv
-plot_clock_face(paste0(abs_path, "downstream_output/clock_face_plots/CTL_cyclers.png"),"downstream_output/cosinor_results_CTL.csv", BHQ_cutoff = isCyclingBHQCutoff, amp_ratio_cutoff = 0 )
+plot_clock_face(paste0(abs_path, "downstream_output/plots/CTL_clock_face_plot.png"),"downstream_output/cosinor_results_CTL.csv", mouse_data = mouse_data, BHQ_cutoff = isCyclingBHQCutoff, amp_ratio_cutoff = 0 )
 
 setwd(path_to_cyclops_ordering)
 
 #for cycling_in_AD.csv
-plot_clock_face(paste0(abs_path, "downstream_output/clock_face_plots/AD_cyclers.png"),"downstream_output/cosinor_results_AD.csv", BHQ_cutoff = isCyclingBHQCutoff, amp_ratio_cutoff = 0)
+plot_clock_face(paste0(abs_path, "downstream_output/plots/AD_clock_face_plot.png"),"downstream_output/cosinor_results_AD.csv",mouse_data = mouse_data, BHQ_cutoff = isCyclingBHQCutoff, amp_ratio_cutoff = 0)
+
+#plot cyclops histogram
+plot_subject_histogram(path_to_cyclops_ordering, "cond_0")
+plot_subject_histogram(path_to_cyclops_ordering, "cond_1")
+
+#Gene Tracings
+plot_core_clock_genes(path_to_tmm_file, path_to_cyclops_ordering, useBatch = useBatch, percentile = percentile, split_cond_plots = T)
 ```
 
 ### EnrichR

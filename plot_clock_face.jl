@@ -43,7 +43,7 @@ function plot_clock_face(plotname, GOI,GOI_Acrophases, GOI_Ideal, Ideal_Acrophas
     PyPlot.scatter(plot_ideals, ones(length(plot_acrophases)) .* 0.5, alpha = 0.8, s = 75, c = "g", label = "Ideal Acrophases")
     legend( loc = (0.45, -0.1875))
     clim(minimum(minus_log_sig), maximum(minus_log_sig))
-    colorbar( orientation = "horizontal", shrink = .8, label = "-log(Bonferroni p value)")
+    colorbar( orientation = "horizontal", shrink = .8, label = "-log(BHQ value)")
 
     significant_acrophase_mean = Circular_Mean(plot_acrophases)
     range_upper, range_lower = mod.(±(significant_acrophase_mean, π/2), 2π)

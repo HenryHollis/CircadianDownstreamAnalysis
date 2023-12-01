@@ -16,8 +16,8 @@ blunt_outliers = function(vec, percentile = 0.025){
 
 #test which genes are cycling from cyclops subject phase prediction
 is_cycling = function(cyc_pred, tmm, cond_subset, pb = NULL, useBatch = F, percentile = 0.025){
-  print(paste("Running is_cycling() on cond_subset:", cond_subset))
-  if(useBatch){print("NOTE: Using batches in regression.")}
+  # cat(paste("\nRunning is_cycling() on cond_subset:", cond_subset))
+  if(useBatch){cat("\nNOTE: Using batches in regression.")}
 
   #test significant in the following genes, here that all of them.
   seedlist = unlist(unname(tmm[!grepl("_D", unlist(tmm[,1])), 1])) #ASSUMES FIRST COL is names
@@ -103,8 +103,8 @@ is_cycling = function(cyc_pred, tmm, cond_subset, pb = NULL, useBatch = F, perce
 }
 
 is_cycling_method2 = function(cyc_pred, tmm, pb = NULL, useBatch = F, percentile = 0.025){
-  print("Running is_cycling_method2() (analogue of compareRhythms) on all subjects")
-  if(useBatch){print("NOTE: Using batches in regression.")}
+  # cat("\nRunning is_cycling_method2() (analogue of compareRhythms) on all subjects")
+  if(useBatch){cat("\nNOTE: Using batches in regression.")}
 
   seedlist = unlist(unname(tmm[!grepl("_D", unlist(tmm[,1])), 1])) #ASSUMES FIRST COL is names
 
@@ -217,8 +217,8 @@ is_cycling_method2 = function(cyc_pred, tmm, pb = NULL, useBatch = F, percentile
 }
 
 diff_rhyth = function(cyc_pred, tmm, seedlist,  pb = NULL, useBatch = F, percentile = 0.025){
-  print(paste("Running diff_rhyth() on seedlist of size:", length(seedlist)))
-  if(useBatch){print("NOTE: Using batches in regression.")}
+  # cat(paste("\nRunning diff_rhyth() on seedlist of size:", length(seedlist)))
+  if(useBatch){cat("\nNOTE: Using batches in regression.")}
 
   cond_row_of_tmm = which(tolower(unlist(tmm[, 1])) == "cond_d")
   cyc_pred$Covariate_D = tmm[cond_row_of_tmm, na.exclude(match(cyc_pred$ID, colnames(tmm)))] %>% unname %>% unlist
@@ -303,8 +303,8 @@ diff_rhyth = function(cyc_pred, tmm, seedlist,  pb = NULL, useBatch = F, percent
 }
 
 diff_rhyth_AD_severity = function(cyc_pred, tmm, seedlist, rosmap_clin_path,  pb = NULL, useBatch = F, percentile = 0.025){
-  print("Running diff_rhyth_AD_severity()")
-  if(useBatch){print("NOTE: Using batches in regression.")}
+  cat("\nRunning diff_rhyth_AD_severity()")
+  if(useBatch){cat("\nNOTE: Using batches in regression.")}
   ##### read in ROSMAP clin ####
   rosmap_clin = read_csv(rosmap_clin_path, show_col_types = FALSE)
   rosmap_clin = rosmap_clin[ na.exclude(match(cyc_pred$ID, rosmap_clin$projid)),]
@@ -428,8 +428,8 @@ diff_rhyth_AD_severity = function(cyc_pred, tmm, seedlist, rosmap_clin_path,  pb
 }
 
 mesor_differences = function(cyc_pred, tmm, DR_genes, pb = NULL, useBatch = F, percentile = 0.025){ ##
-  print("Running Mesor_differences()")
-  if(useBatch){print("NOTE: Using batches in regression.")}
+  # cat("\nRunning Mesor_differences()")
+  if(useBatch){cat("\nNOTE: Using batches in regression.")}
 
   cond_row_of_tmm = which(tolower(unlist(tmm[, 1])) == "cond_d")
   cyc_pred$Covariate_D = tmm[cond_row_of_tmm, na.exclude(match(cyc_pred$ID, colnames(tmm)))] %>% unname %>% unlist
@@ -533,7 +533,8 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingSigCutoff 
   cyc_pred = read_csv(paste(order_path, "Fits", cyc_pred_file[1], sep = '/'), show_col_types = FALSE)
 
   #perform is_cycling (method 1) nested regression on CTL data
-  pb <- progress_bar$new(total = dim(tmm)[1])
+  pb <- progress_bar$new(total = dim(tmm)[1],
+                         format = "Running is_cycling() on CTL [:bar] :percent")
   cycling_in_CTL = is_cycling(cyc_pred, tmm, cond_subset = "cond_0", useBatch = useBatch, pb = pb, percentile = percentile)
   #Add Ensemble genenames to output
   Ensembl = Ensembl_dict$ENSEMBL[match(cycling_in_CTL$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
@@ -544,7 +545,8 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingSigCutoff 
   strong_cyclers_CTL_AR1 = dplyr::filter(cycling_in_CTL, as.numeric(amp_ratio) >=0.1 & as.numeric(BHQ) < isCyclingSigCutoff) %>% arrange(as.numeric(BHQ))
 
   #perform is_cycling (method 1) nested regression on AD data
-  pb <- progress_bar$new(total = dim(tmm)[1])
+  pb <- progress_bar$new(total = dim(tmm)[1],
+                         format = "Running is_cycling() on AD [:bar] :percent")
   cycling_in_AD = is_cycling(cyc_pred, tmm, cond_subset = "cond_1", useBatch = useBatch, pb = pb, percentile = percentile)
   #Add Ensemble genenames to output
   Ensembl = Ensembl_dict$ENSEMBL[match(cycling_in_AD$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
@@ -555,7 +557,8 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingSigCutoff 
   strong_cyclers_AD_AR1 = dplyr::filter(cycling_in_AD, as.numeric(amp_ratio) >=0.1 & as.numeric(BHQ) < isCyclingSigCutoff) %>% arrange(as.numeric(BHQ))
 
   #perform is_cycling (method 2) nested regression on all data ( all data tested together, same to compareRhythms)
-  pb <- progress_bar$new(total = dim(tmm)[1])
+  pb <- progress_bar$new(total = dim(tmm)[1],
+                         format = "Running is_cycling() (method 2, both AD/CTL) [:bar] :percent")
   cycling_in_either_cond = is_cycling_method2(cyc_pred, tmm, useBatch = useBatch, pb = pb, percentile = percentile)
   #Add Ensemble genenames to output
   Ensembl = Ensembl_dict$ENSEMBL[match(cycling_in_either_cond$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
@@ -575,7 +578,8 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingSigCutoff 
 
   ##### mesor differences ######
   gene_list_mesor =  unlist(unname(tmm[!grepl("_D", unlist(tmm[,1])), 1])) # TEST ALL genes for Mesor diff (not just cyclers)
-  pb <- progress_bar$new(total = length(gene_list_mesor))
+  pb <- progress_bar$new(total = length(gene_list_mesor),
+                         format = "Running diff_mesor() [:bar] :percent")
   differential_mesor = mesor_differences(cyc_pred, tmm, gene_list_mesor,useBatch = useBatch, pb = pb, percentile = percentile)
   Ensembl = Ensembl_dict$ENSEMBL[match(differential_mesor$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
   differential_mesor = cbind(Ensembl, differential_mesor)
@@ -589,7 +593,8 @@ run_cycling_and_dr_analysis = function(order_path, tmm_path, isCyclingSigCutoff 
   ####### differential rhythms #####
   DR_results = list()
   for(genelist in DR_genelist_list){
-    pb <- progress_bar$new(total = length(genelist))
+    pb <- progress_bar$new(total = length(genelist),
+                           format = "Running diff_rhythms() [:bar] :percent")
     diff_rhythms_results = diff_rhyth(cyc_pred, tmm, genelist, useBatch = useBatch, pb = pb, percentile = percentile)
     Ensembl = Ensembl_dict$ENSEMBL[match(diff_rhythms_results$Gene_Symbols, Ensembl_dict$Gene_Symbol)]
     diff_rhythms_results = cbind(Ensembl, diff_rhythms_results)

@@ -39,9 +39,20 @@ mouse_data = data.frame(acrophase = c(0, 0.079063, 0.151440, 2.29555, 2.9090, 2.
                      Gene_Symbols = toupper(c("Arntl", "Clock", "Npas2", "Nr1d1", "Bhlhe41", "Nr1d2", 
                      "Dbp", "Ciart", "Per1", "Per3", "Tef", "Hlf", "Cry2",
                      "Per2", "Cry1", "Rorc", "Nfil3")))
+mouse_data_all_cell = data.frame(acrophase = c(0, 0.079063, 0.151440, 2.29555, 2.9090, 2.9870,
+                                               2.991, 3.007, 3.12197, 3.3058, 3.31357, 3.42557,
+                                               3.5007, 3.8865, 4.99480, 5.04951, 6.0077,
+                                               0, 0.079063, 0.151440, 2.29555, 2.9090, 2.9870,
+                                               2.991, 3.007, 3.12197, 3.3058, 3.31357, 3.42557,
+                                               3.5007, 3.8865, 4.99480, 5.04951, 6.0077),
+                                 Gene_Symbols = c("ARNTL_Astro", "CLOCK_Astro", "NPAS2_Astro", "NR1D1_Astro", "BHLHE41_Astro", "NR1D2_Astro", 
+                                                  "DBP_Astro", "CIART_Astro", "PER1_Astro", "PER3_Astro", "TEF_Astro", "HLF_Astro", "CRY2_Astro",
+                                                  "PER2_Astro", "CRY1_Astro", "RORC_Astro", "NFIL3_Astro",
+                                                  "ARNTL_Eneuron", "CLOCK_Eneuron", "NPAS2_Eneuron", "NR1D1_Eneuron", "BHLHE41_Eneuron", "NR1D2_Eneuron", 
+                                                  "DBP_Eneuron", "CIART_Eneuron", "PER1_Eneuron", "PER3_Eneuron", "TEF_Eneuron", "HLF_Eneuron", "CRY2_Eneuron",
+                                                  "PER2_Eneuron", "CRY1_Eneuron", "RORC_Eneuron", "NFIL3_Eneuron"))
 
-
-plot_clock_face = function(plotname, df_filename, BHQ_cutoff=0.05, amp_ratio_cutoff = 0.1, color = "r"){
+plot_clock_face = function(plotname, df_filename,mouse_data = mouse_data, BHQ_cutoff=0.05, amp_ratio_cutoff = 0.1, color = "r"){
   df = read_csv(df_filename, show_col_types = F)
   df = dplyr::filter(df, amp_ratio >= amp_ratio_cutoff & BHQ < BHQ_cutoff)
   keep_genes = intersect(df$Gene_Symbols, mouse_data$Gene_Symbols)
