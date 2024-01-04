@@ -47,17 +47,20 @@ plot_gene_trace = function(cyc_pred, tmm, seedlist,  useBatch = F,
     gexp1 = as.numeric(unlist(df[,seedlist[i]]))
     times1 = df$Phase
     I1 = I
+    my_df = df
     if(useBatch){b1 = b}
     
     rm_NA = which(is.na(gexp1))
     if (length(rm_NA) <= floor(.7*nrow(df))){ #only proceed if >70% of data are not NA
-      if(!is_empty(rm_NA)){
-        gexp1 = gexp1[-rm_NA]
+      if(!is_empty(rm_NA)){ #if there are NA data points...
+        gexp1 = gexp1[-rm_NA] #remove them from the expression, times, and condition vectors
         times1 = times1[-rm_NA]
         I1 = I[-rm_NA]
-        if(useBatch){b1 = b1[-rm_NA]}
+        my_df = my_df[-rm_NA,]
+        if(useBatch){b1 = b1[-rm_NA]} #and batch vector if using batch
       }
       
+      #blunt x percentile in each condition separately
       gexp1[I1==levels(I1)[1]] = blunt_outliers(gexp1[I1==levels(I1)[1]], percentile = percentile)
       gexp1[I1==levels(I1)[2]] = blunt_outliers(gexp1[I1==levels(I1)[2]], percentile = percentile)
       
@@ -72,21 +75,21 @@ plot_gene_trace = function(cyc_pred, tmm, seedlist,  useBatch = F,
       
       if(useBatch){
         #When you have multiple batches, which batch do you use as the fitted values? We take the weighted average:
-        CTL_B1 = which(b == levels(b)[1] & I == levels(I)[1])
+        CTL_B1 = which(b == levels(b)[1] & I1 == levels(I1)[1])
         CTL_B1_mesor = full_model[["coefficients"]][["(Intercept)"]] 
-        CTL_B2 = which(b == levels(b)[2] & I == levels(I)[1])
+        CTL_B2 = which(b == levels(b)[2] & I1 == levels(I1)[1])
         CTL_B2_mesor = full_model[["coefficients"]][["(Intercept)"]] + full_model[["coefficients"]][["b1cond_1"]] 
-        CTL_either = which(I == levels(I)[1])
+        CTL_either = which(I1 == levels(I1)[1])
         avg_cond_0_fitted = ( CTL_B1_mesor * length(CTL_B1) + 
                               CTL_B2_mesor * length(CTL_B2)  ) / length(CTL_either)
         full_model$fitted.values[CTL_B1] = full_model$fitted.values[CTL_B1] + (avg_cond_0_fitted - CTL_B1_mesor)
         full_model$fitted.values[CTL_B2] = full_model$fitted.values[CTL_B2] + (avg_cond_0_fitted - CTL_B2_mesor)
         
-        AD_B1 = which(b == levels(b)[1] & I == levels(I)[2])
+        AD_B1 = which(b == levels(b)[1] & I1 == levels(I1)[2])
         AD_B1_mesor = full_model[["coefficients"]][["(Intercept)"]] + full_model[["coefficients"]][["I1cond_1"]] 
-        AD_B2 = which(b == levels(b)[2] & I == levels(I)[2])
+        AD_B2 = which(b == levels(b)[2] & I1 == levels(I1)[2])
         AD_B2_mesor = full_model[["coefficients"]][["(Intercept)"]] + full_model[["coefficients"]][["I1cond_1"]] + full_model[["coefficients"]][["b1cond_1"]]
-        AD_either = which(I == levels(I)[2])
+        AD_either = which(I1 == levels(I1)[2])
         avg_cond_1_fitted = ( AD_B1_mesor * length(AD_B1) + 
                                AD_B2_mesor * length(AD_B2) ) / length(AD_either)
         
@@ -97,12 +100,12 @@ plot_gene_trace = function(cyc_pred, tmm, seedlist,  useBatch = F,
       fitted_ctl = full_model$fitted.values[I1==levels(I1)[1]]
       fitted_ad = full_model$fitted.values[I1==levels(I1)[2]]
     
-      df[,seedlist[i]] =  df[,seedlist[i]] %>% as.numeric %>% blunt_outliers(., percentile = percentile)
-      ylim_max = max(df[,seedlist[i]])
-      ylim_min = min(df[,seedlist[i]])
-      df_AD = df %>% filter(Cond_D == "cond_1")
+      my_df[,seedlist[i]] =  gexp1
+      ylim_max = max(my_df[,seedlist[i]])
+      ylim_min = min(my_df[,seedlist[i]])
+      df_AD = my_df %>% dplyr::filter(Cond_D == "cond_1")
       df_AD$fitted_values = fitted_ad
-      df_CTL = df %>% filter(Cond_D == "cond_0")
+      df_CTL = my_df %>% dplyr::filter(Cond_D == "cond_0")
       df_CTL$fitted_values = fitted_ctl
       if(split_cond_plots){
         
@@ -139,7 +142,7 @@ plot_gene_trace = function(cyc_pred, tmm, seedlist,  useBatch = F,
       
       #print(p)
       if(savePlots){
-        ggsave(paste0("downstream_output/plots/", seedlist[i], "_gene_trace.png"),p)
+        ggsave(paste0("plots/", seedlist[i], "_gene_trace.png"),p)
       }
     }
   }
@@ -147,18 +150,21 @@ plot_gene_trace = function(cyc_pred, tmm, seedlist,  useBatch = F,
 }
 
 
-plot_core_clock_genes = function(tmm_path, cyclops_path, useBatch = useBatch,
+plot_core_clock_genes = function(tmm_path, cyclops_path, seedlist = NULL, useBatch = useBatch,
                                  percentile = percentile, split_cond_plots = T){
   tmm = read_csv(tmm_path, show_col_types = FALSE)
   cyc_pred_file = list.files(path = paste0(cyclops_path, "/Fits/"), pattern = '*Fit_Output_*')
   cyc_pred = read_csv(paste(cyclops_path, "Fits", cyc_pred_file[1], sep = '/'), show_col_types = FALSE)
-  setwd(cyclops_path)
-  if (!(dir.exists("downstream_output/plots"))){
-    dir.create("downstream_output/plots")
+  setwd(paste0(cyclops_path, "/downstream_output"))
+  if (!(dir.exists("plots"))){
+    dir.create("plots")
   }
   
   genelist = c("ARNTL", "NPAS2", "CLOCK", "CRY1", "CRY2", "NR1D1", "NR1D2", "PER1", "PER2", "PER3", "DBP", "TEF")
-  plot_gene_trace(cyc_pred, tmm, genelist,useBatch = useBatch,
+  if(is.null(seedlist)){
+    seedlist = genelist
+  }
+  plot_gene_trace(cyc_pred, tmm, seedlist, useBatch = useBatch,
                   savePlots = T, percentile = percentile, split_cond_plots = T)
   
   
