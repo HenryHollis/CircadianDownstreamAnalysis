@@ -3,7 +3,8 @@ library(tidyverse)
 library(doParallel)
 library(progress)
 
-plot_prot = function(proteiomics_file_path, tmt_filename, path_to_rosmap_clin, path_to_cyclops_ordering , genelist, percentile = 0.025){
+plot_prot = function(proteiomics_file_path, tmt_filename, path_to_rosmap_clin, path_to_cyclops_ordering,genelist, percentile = 0.025){
+  
   setwd(proteiomics_file_path)
   prot = read_csv(tmt_filename, show_col_types = F)
   
@@ -137,15 +138,15 @@ order_prot = function(proteiomics_file_path, tmt_filename, path_to_rosmap_clin, 
 write_prot_rnks = function(path_to_cyclops_ordering){
   print("Creating rnk files for fGSEA.")
   ## is cycling in CTL ranked by -log(p)
-  CTL_cyclers_file = list.files(path = paste0(path_to_cyclops_ordering, "downstream_output/proteomics"), pattern = "cycling_in_CTL_CyclingBHQ\\d+_blunting.*.csv")
-  if (!purrr::is_empty(AD_cyclers_file)){
+  CTL_cyclers_file = list.files(path = paste0(path_to_cyclops_ordering, "downstream_output/proteomics"), pattern = "cycling_in_CTL_CyclingBHQ\\d+_blunting.*csv")
+  if (!purrr::is_empty(CTL_cyclers_file)){
     CTL_cyclers = read_csv(paste0(path_to_cyclops_ordering, "downstream_output/proteomics/", CTL_cyclers_file), show_col_types = FALSE)
     ranked_CTL_cyclers = arrange(CTL_cyclers, p_statistic)
     df1 = data.frame(genes = ranked_CTL_cyclers$Uniprot, metric = -log(ranked_CTL_cyclers$p_statistic))
     write.table(df1, paste0(path_to_cyclops_ordering, "downstream_output/proteomics/fGSEA/rnk_files/CTL_cyclers_minusLogPRanked.rnk"), sep = '\t', col.names = F, row.names = F)
   } 
   ## is cycling in AD ranked by -log(p)
-  AD_cyclers_file = list.files(path = paste0(path_to_cyclops_ordering, "downstream_output/proteomics"), pattern = "cycling_in_AD_CyclingBHQ\\d+_blunting.*.csv")
+  AD_cyclers_file = list.files(path = paste0(path_to_cyclops_ordering, "downstream_output/proteomics"), pattern = "cycling_in_AD_CyclingBHQ\\d+_blunting.*csv")
   if (!purrr::is_empty(AD_cyclers_file)){
     AD_cyclers = read_csv(paste0(path_to_cyclops_ordering, "downstream_output/proteomics/", AD_cyclers_file), show_col_types = F)
     ranked_AD_cyclers = arrange(AD_cyclers, p_statistic)
@@ -162,11 +163,21 @@ write_prot_rnks = function(path_to_cyclops_ordering){
   }
   
   ## DR cyclers ranked by log(ADamp/CTLamp)
-  DR_cyclers_file = list.files(path = paste0(path_to_cyclops_ordering, "downstream_output/proteomics"), pattern = "diff_rhythms_Cycling.*.csv")
+  DR_cyclers_file = list.files(path = paste0(path_to_cyclops_ordering, "downstream_output/proteomics"), pattern = "diff_rhythms_Cycling.*\\.csv")
   if (!purrr::is_empty(DR_cyclers_file)){
     DR_cyclers = read_csv(paste0(path_to_cyclops_ordering, "downstream_output/proteomics/", DR_cyclers_file), show_col_types = F)
     ranked_DR_cyclers = arrange(DR_cyclers, Log_AD_CTL_ampRatio)
     df4 = data.frame(genes = ranked_DR_cyclers$Uniprot, metric = ranked_DR_cyclers$Log_AD_CTL_ampRatio)
-    write.table(df4, paste0(path_to_cyclops_ordering, "downstream_output/proteomics/fGSEA/rnk_files/DR_cyclers_AmpRatio25_Log(AD-CTL)ranked.rnk"), sep = '\t', col.names = F, row.names = F)
+    write.table(df4, paste0(path_to_cyclops_ordering, "downstream_output/proteomics/fGSEA/rnk_files/DR_cyclers_Log(AD-CTL)ranked.rnk"), sep = '\t', col.names = F, row.names = F)
+  }
+  
+  ## Diff Mesor ranked by log(ADmesor/CTLmesor)
+  diff_mesor_file = list.files(path = paste0(path_to_cyclops_ordering, "downstream_output/proteomics"), pattern = "diff_mesor.*\\.csv")
+  if (!purrr::is_empty(diff_mesor_file)){
+    diff_mesor = read_csv(paste0(path_to_cyclops_ordering, "downstream_output/proteomics/", diff_mesor_file), show_col_types = F)
+    diff_mesor$AD_minus_CTL_mes = as.numeric(diff_mesor$mesor_AD) - as.numeric(diff_mesor$mesor_CTL)
+    ranked_diff_mesor = arrange(diff_mesor, AD_minus_CTL_mes)
+    df5 = data.frame(genes = ranked_diff_mesor$Uniprot, metric = ranked_diff_mesor$AD_minus_CTL_mes)
+    write.table(df5, paste0(path_to_cyclops_ordering, "downstream_output/proteomics/fGSEA/rnk_files/diff_mesor_(AD-CTL)ranked.rnk"), sep = '\t', col.names = F, row.names = F)
   }
 }

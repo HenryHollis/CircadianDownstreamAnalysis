@@ -46,10 +46,10 @@ Select the CYCLOPS ordering path and path to data file and path to DEseq2 differ
 
 ```{r}
 #path to cyclops ordering
-path_to_cyclops_ordering = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/TMMs_w_batch/Exc3and5_FiltByEdgeRDefault_fixedipBulkChenZhang_condAndBatchCovs_3EGdefault_noTransferFit/"
+path_to_cyclops_ordering = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/TMMs_w_batch/Exc3and5_FiltByEdgeRDefault_fixedipBulkChenZhang_condAndBatchCovs_04ContrVar4EGdefault_noTransferFit/"
 
 #path to normalized counts
-path_to_tmm_file = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/EdgeR_filt_normed/PseudobulkAllCell_FiltByExprDefault_TMM.csv"
+path_to_tmm_file = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/EdgeR_filt_normed/ExcSubtypes3and5_FiltByExprDefault_TMM.csv"
 
 # optional path to file containing differential expression results
 deseq_de_filename = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/Exc3_5/Exc3_5_filtByExpr_combatSeq_edgeR_DE_exactTest.csv"
@@ -60,7 +60,7 @@ metabolon_datakey = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/Metabolon/ROSMAP
 
 #BHQ corrected p cutoff to be considered cycling in analysis:
 isCyclingBHQCutoff = 0.1
-percentile = 0.05
+percentile = 0.025
 useBatch = T
 ```
 
@@ -107,6 +107,7 @@ Plot Other Genes
 
 ```{r}
 plot_me = c("RPL18","RPS7","RPL22","RPS18","RPL8","RPL10A","RPS13","RPL14","RPS15A","RPS12","RPL36AL","RPL34","RPL30","RPL9","RPL21","RPS28","RPSA","RPL26","RPL27A","FAU","RPS3A","RPL7A","RPL17","RPS27A","RPS16","RPL15","RPLP1","RPL7","RPL10","RPL23A","RPL18A","RPL3","RPL12","RPL39","RPL37A","RPL37","RPS10","RPL13","RPL35A","RPS23","RPL13A","RPL38","RPS29","RPL24","RPL41","RPL35","RPS26","RPS2","RPS9","RPL32","RPL6","RPS21","RPS24","RPS25","RPL36","RPL19","RPS27","RPL29","RPS15","RPS3","RPS5","RPS8","RPL27","RSL24D1","RPS6","RPL11")
+
 tmm = read_csv(path_to_tmm_file, show_col_types = FALSE)
   cyc_pred_file = list.files(path = paste0(path_to_cyclops_ordering, "/Fits/"), pattern = '*Fit_Output_*')
 cyc_pred = read_csv(paste(path_to_cyclops_ordering, "Fits", cyc_pred_file[1], sep = '/'), show_col_types = FALSE)
@@ -121,7 +122,6 @@ Call EnrichR API with python, supplying various lists from cycling and different
 path = getwd()
 setwd(paste0(path_to_cyclops_ordering, "downstream_output"))
 path_no_space = gsub(" ", "\\ ", path, fixed = TRUE)
-print(path_no_space)
 #create list of filenames from the enrichR_files subfolder
 gene_lists = list.files("./enrichR_files/", pattern = "^(CTL_|AD_|diff_mesor)")
 
@@ -317,8 +317,8 @@ Make sure you have downloaded [**syn32835854**]{.underline}, [**syn21266449**]{.
 
 ```{r}
 proteiomics_file_path = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/Proteomics/SynapseDownloads/"
-# tmt_filename = "2b.unlogged_relative_abundance-ROSMAP610.R1+R2-2xTAMPORcorrected.csv" #syn51389605
-tmt_filename = "3.Regressed(age.sex.PMI-noDxProtect)_cleanDat-7814x610-ROSMAP610_R1+R2(Uniprot2019multiconsensus).csv"
+tmt_filename = "2b.unlogged_relative_abundance-ROSMAP610.R1+R2-2xTAMPORcorrected.csv" #syn51389605
+# tmt_filename = "3.Regressed(age.sex.PMI-noDxProtect)_cleanDat-7814x610-ROSMAP610_R1+R2(Uniprot2019multiconsensus).csv"
 
 #make sure you have downloaded syn32835854,  syn21266449, and syn51389605
 if (!(dir.exists(paste0(path_to_cyclops_ordering, "/downstream_output/proteomics")))){
@@ -340,13 +340,33 @@ tmt_filename = "2b.unlogged_relative_abundance-ROSMAP610.R1+R2-2xTAMPORcorrected
 plot_prot(proteiomics_file_path, tmt_filename, path_to_rosmap_clin, path_to_cyclops_ordering, c("RPL10|P27635", "RPL32|P62910", "NDUFB1|O75438"), percentile = percentile)
 ```
 
-GSEA on proteomics
+fGSEA on proteomics
 
 ```{r}
+path = getwd()
 setwd(path_to_cyclops_ordering)
 if (!(dir.exists("downstream_output/proteomics/fGSEA"))){
   dir.create("downstream_output/proteomics/fGSEA")
   dir.create("downstream_output/proteomics/fGSEA/rnk_files")
   dir.create("downstream_output/proteomics/fGSEA/fGSEA_results")
 }
+
+isCyclingBHQCutoff_str = str_extract(as.character(isCyclingBHQCutoff), "(?<=\\.)\\d+")
+
+#path of parent folder
+setwd(path)
+
+write_prot_rnks(path_to_cyclops_ordering)
+
+#Pathways, downloaded from MsigDB
+pathways <- c(gmtPathways("./MsigDB_gmts_for_GSEA/c2.cp.kegg.v2023.1.Hs.symbols.gmt"), gmtPathways("./MsigDB_gmts_for_GSEA/h.all.v2023.1.Hs.symbols.gmt"))
+
+
+gene_remapping_dict = read.delim("./MsigDB_gmts_for_GSEA/Human_UniProt_IDs_MSigDB.v2023.2.Hs.chip", sep = '\t')
+
+setwd(paste0(path_to_cyclops_ordering,"/downstream_output/proteomics/fGSEA/rnk_files"))
+
+rnk_files = list.files(pattern = ".rnk")
+
+run_fgsea(rnk_files, gene_remapping_dict, pathways)
 ```

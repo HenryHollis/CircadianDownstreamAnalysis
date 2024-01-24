@@ -114,7 +114,6 @@ if res.ok:
 ################################################
 def plot_results(out, filename):
     fig, ax = plt.subplots(figsize = (0.1, 2.75))
-
     cmap = mpl.cm.bwr_r
     norm = mpl.colors.Normalize(vmin = 0, vmax = .2)
 
@@ -138,52 +137,57 @@ def plot_results(out, filename):
 
 #Run through libraries and download enrichment results to outfiles
 dir_path = os.path.join(parent_folder_path, "EnrichR_results", ("EnrichR_" + file_name + "_BCKGRND-" + background_name ))
-os.makedirs(dir_path)
-os.chdir(dir_path)
-out_data = []
+if not os.path.exists(dir_path):
+    # If it doesn't exist, create the directory
+    os.makedirs(dir_path)
+    print(f'Directory "{dir_path}" created.')
+    os.chdir(dir_path)
+    out_data = []
 
+    try:
+        for lib in libs:
+            res = requests.post(
+                    base_url+'/api/backgroundenrich',
+                    data=dict(
+                    userListId=userlist_response["userListId"],
+                    backgroundid=background_response["backgroundid"],
+                    backgroundType=lib
+                    )
+                )
+            if res.ok:
+                results = res.json()
+            else:
+                print("Error with {}".format(lib))
 
+            out = pd.DataFrame(results[lib], columns = ["Rank", "Term name", "P-value", "Z-score", "Combined score", "Overlapping genes", "Adjusted p-value", "Old p-value", "Old adjusted p-value"])
+            out['gene count'] = out['Overlapping genes'].apply(lambda x: len(x))
+            output_path = (file_name + "_LIBRY-"+ str.replace(lib, "_", "") + "_BCKGRND-" + background_name + ".csv" )
+            plot_results(out,  (file_name + "_LIBRY-"+ str.replace(lib, "_", "")  ) )
+            out_data.append(out)
+            out.to_csv(output_path, index = False)
+            print("Saved {} results to file".format(lib))
+    except:
+        pass
+    cmap = mpl.cm.bwr_r
+    norm = mpl.colors.Normalize(vmin = 0, vmax = .2)
 
-for lib in libs:
-    res = requests.post(
-            base_url+'/api/backgroundenrich',
-            data=dict(
-            userListId=userlist_response["userListId"],
-            backgroundid=background_response["backgroundid"],
-            backgroundType=lib
-            )
-        )
-    if res.ok:
-        results = res.json()
-    else:
-        print("Error with {}".format(lib))
+    mapper = cm.ScalarMappable(norm = norm, cmap = cm.bwr_r)
 
-    out = pd.DataFrame(results[lib], columns = ["Rank", "Term name", "P-value", "Z-score", "Combined score", "Overlapping genes", "Adjusted p-value", "Old p-value", "Old adjusted p-value"])
-    out['gene count'] = out['Overlapping genes'].apply(lambda x: len(x))
-    output_path = (file_name + "_LIBRY-"+ str.replace(lib, "_", "") + "_BCKGRND-" + background_name + ".csv" )
-    plot_results(out,  (file_name + "_LIBRY-"+ str.replace(lib, "_", "")  ) )
-    out_data.append(out)
-    out.to_csv(output_path, index = False)
-    print("Saved {} results to file".format(lib))
+    # Create a new figure and axes for the combined plot
+    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+    axes = axes.flatten()
 
-cmap = mpl.cm.bwr_r
-norm = mpl.colors.Normalize(vmin = 0, vmax = .2)
+    if len(out_data) > 4:
+        out_data = out_data[0:4]
 
-mapper = cm.ScalarMappable(norm = norm, cmap = cm.bwr_r)
-
-# Create a new figure and axes for the combined plot
-fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-axes = axes.flatten()
-
-if len(out_data) > 4:
-    out_data = out_data[0:4]
-
-for i, out in enumerate(out_data):
-    ax = sns.barplot(data = out.head(20), x = 'gene count', y = 'Term name', palette = mapper.to_rgba(out.head(20)["Adjusted p-value"]), ax=axes[i])
-    ax.set_yticklabels([textwrap.shorten(e, 35, placeholder="...") for e in out.head(20)['Term name']])
-    axes[i].set_title(libs[i])
-    
-axes[0].figure.colorbar(mapper)
-plt.tight_layout(h_pad= 1, w_pad = .3)
-plt.subplots_adjust(left=.2, right=0.98, top=0.9, bottom=0.1)
-plt.savefig((file_name + "_barplot_AllLibs.png") )
+    for i, out in enumerate(out_data):
+        ax = sns.barplot(data = out.head(20), x = 'gene count', y = 'Term name', palette = mapper.to_rgba(out.head(20)["Adjusted p-value"]), ax=axes[i])
+        ax.set_yticklabels([textwrap.shorten(e, 35, placeholder="...") for e in out.head(20)['Term name']])
+        axes[i].set_title(libs[i])
+        
+    axes[0].figure.colorbar(mapper)
+    plt.tight_layout(h_pad= 1, w_pad = .3)
+    plt.subplots_adjust(left=.2, right=0.98, top=0.9, bottom=0.1)
+    plt.savefig((file_name + "_barplot_AllLibs.png") )
+else:
+    print(f'Directory "{dir_path}" already exists. Skipping.')
