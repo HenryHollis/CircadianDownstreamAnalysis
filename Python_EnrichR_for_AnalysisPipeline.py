@@ -28,6 +28,7 @@ parser.add_argument('-g',"--genes_list_file", help="Path to gene list")
 parser.add_argument('-b',"--background_list_file", help="Path to Background")
 args = parser.parse_args()
 config = vars(args)
+print("Arguments: ")
 print(config)
 
 # list of enrichR libraries, by default, Kegg, GOBP, Hallmarks and wikipathways
@@ -40,9 +41,9 @@ libs = args.lib
 #     return filename
 
 # Get genes from file selected by user
-print("Please select file containing list of genes (Symbols)")
+# print("Please select file containing list of genes (Symbols)")
 gene_list_path =  args.genes_list_file   #open_file_dialog()
-print("Path to genes list:", gene_list_path)
+# print("Path to genes list:", gene_list_path)
 parent_folder_path = os.path.dirname(os.path.dirname(gene_list_path))
 file_name = os.path.splitext(os.path.basename(gene_list_path))[0]
 file_name = str.replace(file_name, "_", "")
@@ -50,9 +51,9 @@ file_name = str.replace(file_name, "_", "")
 print()
 
 #Get Background from file selected by user
-print("Please select file containing list of BACKGROUND genes (Symbols)")
+# print("Please select file containing list of BACKGROUND genes (Symbols)")
 background_path =  args.background_list_file #open_file_dialog()
-print("Path to Background list:", background_path)
+# print("Path to Background list:", background_path)
 background_name = os.path.splitext(os.path.basename(background_path))[0]
 background_name = str.replace(background_name, "_", "")
 
@@ -72,16 +73,16 @@ def parse_csv_file(file_path):
 
 #call function to parse csv file containing gene list
 gene_list_df = parse_csv_file(gene_list_path)
-if gene_list_df is not None:
-    print("Background DataFrame (nrow: {}):".format(gene_list_df.shape[0]))
-    print(gene_list_df.head())
+# if gene_list_df is not None:
+#     print("Background DataFrame (nrow: {}):".format(gene_list_df.shape[0]))
+#     print(gene_list_df.head())
     
 #call function to parse csv file containing background list
 
 background_df = parse_csv_file(background_path)
-if background_df is not None:
-    print("Background DataFrame (nrow: {}):".format(background_df.shape[0]))
-    print(background_df.head())
+# if background_df is not None:
+#     print("Background DataFrame (nrow: {}):".format(background_df.shape[0]))
+#     print(background_df.head(3))
 
 
 

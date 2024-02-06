@@ -30,7 +30,7 @@ augment_tf_file = function(TF_filename, deseq_filename, isCyclingBHQCutoff_str){
   TF_file$DR_AR1_BHQ = DR_AR1$BHQ[match(toupper(TF_file$TF_NAME), DR_AR1$Gene_Symbols)]
   TF_file$DR_AR1_mthd2_BHQ = DR_AR1_mthd2$BHQ[match(toupper(TF_file$TF_NAME), DR_AR1_mthd2$Gene_Symbols)]
   TF_file$DR_logAmpRatio = DR_AR1$Log_AD_CTL_ampRatio[match(toupper(TF_file$TF_NAME), DR_AR1$Gene_Symbols)] 
-  TF_file$diff_mesor_AR1 = Diff_mesor$BHQ[match(toupper(TF_file$TF_NAME), Diff_mesor$Gene_Symbols)]
+  TF_file$diff_mesor = Diff_mesor$BHQ[match(toupper(TF_file$TF_NAME), Diff_mesor$Gene_Symbols)]
   TF_file$DEseq_DE_BHQ = DEseq_toptags$FDR[match(toupper(TF_file$TF_NAME), DEseq_toptags$X)] 
   
   write.table(TF_file, TF_filename, row.names = F, col.names = T, sep = ',')
@@ -38,6 +38,8 @@ augment_tf_file = function(TF_filename, deseq_filename, isCyclingBHQCutoff_str){
   cycling_CTL_tfs = dplyr::filter(TF_file, FDR < 0.1 & cycling_in_CTL_BHQ < 0.1) 
   cycling_AD_tfs = dplyr::filter(TF_file, FDR < 0.1 & cycling_in_AD_BHQ < 0.1)
   DE_tfs = dplyr::filter(TF_file, FDR < 0.1 & DEseq_DE_BHQ < 0.1) 
+  DM_tfs = dplyr::filter(TF_file, FDR < 0.1 & diff_mesor < 0.1) 
+  
   if(!(dir.exists(paste0(tools::file_path_sans_ext(TF_filename), "_plots")))){
     dir.create(paste0(tools::file_path_sans_ext(TF_filename), "_plots"))
   }
@@ -85,6 +87,17 @@ augment_tf_file = function(TF_filename, deseq_filename, isCyclingBHQCutoff_str){
         xlab("-log(Pscan/enrichR FDR)")+
         ggtitle("DEseq diff expr TF enriched in gene list")
     ggsave("DE_TF_enriched_in_list.png", p4, width = 6, height = 5, units = "in")
+  }
+  if(nrow(DM_tfs)>0){
+    p5 =  ggplot(TF_file)+
+      geom_point(mapping = aes(x = -log(FDR), y = -log(diff_mesor)))+
+      geom_label_repel(data = DM_tfs,
+                       aes(x = -log(FDR), y = -log(diff_mesor),label = TF_NAME),
+                       nudge_x = 0.5, nudge_y = 0.5,color = "blue",
+                       box.padding = 0.35, point.padding = 0.5)+
+      xlab("-log(Pscan/enrichR FDR)")+
+      ggtitle("Diff Mesor TF enriched in gene list")
+    ggsave("DM_TF_enriched_in_list.png", p5, width = 6, height = 5, units = "in")
   }
   setwd(current_dir)
 }

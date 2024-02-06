@@ -12,6 +12,8 @@ This notebook is for performing downstream analysis of CYCLOPS. It includes runn
 ```{r Load Libraries, include=FALSE}
 library(reticulate) #use to find conda env for python
 library(tidyverse)
+library(JuliaCall)
+julia = julia_setup("/Applications/Julia-1.6.app/Contents/Resources/julia/bin/")
 source("./differential_rhyth_generalized.R")
 source("./create_rnk_files.R")
 source("./fgsea.R")
@@ -46,13 +48,13 @@ Select the CYCLOPS ordering path and path to data file and path to DEseq2 differ
 
 ```{r}
 #path to cyclops ordering
-path_to_cyclops_ordering = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/TMMs_w_batch/Exc3and5_FiltByEdgeRDefault_fixedipBulkChenZhang_condAndBatchCovs_04ContrVar4EGdefault_noTransferFit/"
+path_to_cyclops_ordering = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/training_output/scROSMAP/cogdx_controls/wAD/ExcitatoryNeurons/TMMs_w_batch/Exc3and5_FiltByEdgeRDefault_fixedipBulkChenZhang_condAndBatchCovs_04ContrVar4EGdefault_noTransferFit_Feb5Redo/"
 
 #path to normalized counts
-path_to_tmm_file = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/EdgeR_filt_normed/ExcSubtypes3and5_FiltByExprDefault_TMM.csv"
+path_to_tmm_file = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/human_data/Cyclops_folders/tmms/scROSMAP/cogdx_controls/EdgeR_filt_normed/Microglia_4_5_6_7_8_10_11_13_15_16_FiltByExprDefault_TMM.csv"
 
 # optional path to file containing differential expression results
-deseq_de_filename = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/Exc3_5/Exc3_5_filtByExpr_combatSeq_edgeR_DE_exactTest.csv"
+deseq_de_filename = "/Users/henryhollis/Box Sync/Henry_stuff/AD_project/scROSMAP/simple_differential_expr/Mglia_4_5_6_7_8_10_11_13_15_16/ Microglia_4_5_6_7_8_10_11_13_15_16_filtByExpr_combatSeq_edgeR_DE_exactTest.csv"
 
 path_to_rosmap_clin = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/Meta_data/cleaned_rosmap_meta_cogdxConds.csv"
 metabolon_filename = "~/Box Sync/Henry_stuff/AD_project/scROSMAP/Metabolon/ROSMAP_Metabolon_HD4_Brain514_assay_data.csv"
@@ -88,12 +90,12 @@ if (!(dir.exists("downstream_output/plots"))){
 }
 
 #for cycling_in_CTL.csv
-plot_clock_face(paste0(path_to_cyclops_ordering, "/downstream_output/plots/CTL_clock_face_plot.png"),"downstream_output/cosinor_results_CTL.csv", mouse_data = mouse_data, BHQ_cutoff = isCyclingBHQCutoff, amp_ratio_cutoff = 0)
+plot_clock_face(paste0(path_to_cyclops_ordering, "/downstream_output/plots/CTL_clock_face_plot.png"), "downstream_output/cosinor_results_CTL.csv", mouse_data = mouse_data, BHQ_cutoff = isCyclingBHQCutoff, amp_ratio_cutoff = 0, force_align = 5.907, force_flipped = T)
 
 setwd(path_to_cyclops_ordering)
 
 #for cycling_in_AD.csv
-plot_clock_face(paste0(path_to_cyclops_ordering, "/downstream_output/plots/AD_clock_face_plot.png"),"downstream_output/cosinor_results_AD.csv",mouse_data = mouse_data, BHQ_cutoff = isCyclingBHQCutoff, amp_ratio_cutoff = 0)
+plot_clock_face(paste0(path_to_cyclops_ordering, "/downstream_output/plots/AD_clock_face_plot.png"),"downstream_output/cosinor_results_AD.csv",mouse_data = mouse_data, BHQ_cutoff = isCyclingBHQCutoff, amp_ratio_cutoff = 0, force_align = 5.907, force_flipped = T)
 
 #plot cyclops histogram
 plot_subject_histogram(path_to_cyclops_ordering, "cond_0")
@@ -239,8 +241,6 @@ apply(arg_df, 1, function(a){
     "/downstream_output/PSEA_files/", a[[3]]), " 5 10000 pdf"))
         })
 ```
-
-### 
 
 ### Transcription Factor Analysis
 

@@ -1,6 +1,4 @@
 library(NMOF)
-library("JuliaCall")
-julia = julia_setup("/Applications/Julia-1.6.app/Contents/Resources/julia/bin/")
 
 cosine_distance <- function(xs, ys) {
   1 - cos(xs - ys)
@@ -45,32 +43,40 @@ mouse_data_all_cell_astro = mouse_data
 mouse_data_all_cell_astro$Gene_Symbols = paste0(mouse_data_all_cell_astro$Gene_Symbols , "_Astro")
 mouse_data_all_cell = bind_rows(mouse_data_all_cell_astro, mouse_data_all_cell_eneuron)
 
-plot_clock_face = function(plotname, df_filename,mouse_data = mouse_data, BHQ_cutoff=0.05, amp_ratio_cutoff = 0.1,best_align = F){
+plot_clock_face = function(plotname, df_filename,mouse_data = mouse_data, BHQ_cutoff=0.05, amp_ratio_cutoff = 0.1,best_align = F, force_align = NULL, force_flipped = NULL){
   df = read_csv(df_filename, show_col_types = F)
   df = dplyr::filter(df, amp_ratio >= amp_ratio_cutoff & BHQ < BHQ_cutoff)
   keep_genes = intersect(df$Gene_Symbols, mouse_data$Gene_Symbols)
   #filter out df and mouse list to just the genes in common:
   df = filter(df, Gene_Symbols %in% keep_genes) %>% arrange(Gene_Symbols)
   mouse_data = filter(mouse_data, Gene_Symbols %in% keep_genes) %>% arrange(Gene_Symbols)
-  if (!best_align & any(df$Gene_Symbols == "ARNTL")){
+  flipped = F #assume no need to flip acrophases
+  if(!best_align & !is.null(force_align)){
+    print("Shifting phases using `force align`")
+    df$phase_MA = df$acrophase - force_align
+    if (force_flipped){
+      print("flipping acrophases.")
+      flipped = T
+      df$phase_MA = -df$phase_MA
+    }
+  } else if (!best_align & any(df$Gene_Symbols == "ARNTL")){
     print("ARNTL set to 0 radians")
-    subtract_acro = df$acrophase[df$Gene_Symbols == "ARNTL"]
+    subtract_acro = df$acrophase[df$Gene_Symbols == "ARNTL"] #what you subtract from ARNTL's phase to get 0
     df$phase_MA = df$acrophase - subtract_acro
     if(sum(cosine_distance(df$phase_MA, mouse_data$acrophase)) > sum(cosine_distance(-df$phase_MA, mouse_data$acrophase))){
       df$phase_MA = -df$phase_MA
+      flipped = T
     }
   }else{
-    print("ARNTL not found, using best alignment")
+    print("Using optimal alignment")
     df$phase_MA = find_best_forward_backward_alignment_grid_search(mouse_data$acrophase, df$acrophase)
-    
   }
-  
+  # print(paste0("shifted phases to ", round(subtract_acro, 3), " and flipped = ", flipped))
   #plot(df$phase_MA, mouse_data$acrophase)
   
   setwd("~/Box Sync/Henry_stuff/AD_project/scROSMAP/Rscripts/automatic_downstream_analysis/")
   if(length(keep_genes )>1){
     julia_source("plot_clock_face.jl")
-    
     julia_call(
       "plot_clock_face",
       plotname, df$Gene_Symbols, df$phase_MA, mouse_data$Gene_Symbols, mouse_data$acrophase, df$BHQ, df$amp_ratio,

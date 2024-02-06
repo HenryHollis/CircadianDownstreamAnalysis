@@ -3,20 +3,23 @@ library(tidyverse)
 library(doParallel)
 
 order_metabolon = function(metabolon_filename, metabolon_datakey, path_to_rosmap_clin, path_to_cyclops_ordering, BHQ_cutoff = 0.1, plot_mets = T){
-  metabolon = read_csv(metabolon_filename, show_col_types = FALSE)
-  metabolon_data_key = read_csv(metabolon_datakey, show_col_types = FALSE)
-  ros_clin = read_csv(path_to_rosmap_clin, show_col_types = FALSE)
-  metabolon = filter(metabolon, individualID %in% ros_clin$individualID)
-  metabolon$projid =  ros_clin$projid[match(metabolon$individualID, ros_clin$individualID)]
-  metab_data = dplyr::select(metabolon, projid | matches("^\\d+$"))
+  metabolon = read_csv(metabolon_filename, show_col_types = FALSE) #read in metabolon assay
+  metabolon_data_key = read_csv(metabolon_datakey, show_col_types = FALSE) #read in metadata file with ID's for metabolites
+  ros_clin = read_csv(path_to_rosmap_clin, show_col_types = FALSE)   #read rosmap clinical metadata
+  metabolon = filter(metabolon, individualID %in% ros_clin$individualID)  #keep the metabolon subjects from my rosmap data
+  metabolon$projid =  ros_clin$projid[match(metabolon$individualID, ros_clin$individualID)] #add projectID key to metabolon
+  metab_data = dplyr::select(metabolon, projid | matches("^\\d+$")) #keeps columns for projid and metabolites (which are numbered)
   
   
-  emat = as.data.frame(t(column_to_rownames(metab_data, var = "projid")))
-  emat$Gene_Symbols = rownames(emat)
+  emat = as.data.frame(t(column_to_rownames(metab_data, var = "projid"))) #make subjects cols, metabs rows
+  emat = log2(emat+1)
+  emat$Gene_Symbols = rownames(emat) 
   emat = dplyr::select(emat, Gene_Symbols, everything())
+  
+  #read in cyclops predicted ordering
   cyc_pred_file = list.files(path = paste0(path_to_cyclops_ordering, "/Fits/"), pattern = '*Fit_Output_*')
   cyc_pred = read_csv(paste(path_to_cyclops_ordering, "Fits", cyc_pred_file[1], sep = '/'), show_col_types = FALSE)
-  cyc_pred = cyc_pred[na.exclude(match(colnames(emat), cyc_pred$ID)),] #keep the samples in cyc_pred that I have ordering for
+  cyc_pred = cyc_pred[na.exclude(match(colnames(emat), cyc_pred$ID)),] #keep the subjects in cyc_pred that I have ordering for
   keep_subs = c(1, which(colnames(emat) %in% cyc_pred$ID))
   emat= emat[, keep_subs]  #keep the emat samples I have ordering for
   all(colnames(emat)[-1] == cyc_pred$ID)
